@@ -1,0 +1,15 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+*.test
+
+*.out
+
+# Goland
+.idea/
+
+# My Note Directory
+notes/
