@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestCommand(t *testing.T) {
+func TestCommand_Execute(t *testing.T) {
 	type args struct {
 		argument []string
 		option   []string
