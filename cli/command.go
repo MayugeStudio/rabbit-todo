@@ -7,10 +7,10 @@ type Command struct {
 	Name      string
 	Arguments []string
 	Options   []string
-	Function  Action
+	Action    Action
 	Usage     UsageFunc
 }
 
 func (c *Command) Execute() (string, error) {
-	return c.Function(c.Arguments, c.Options)
+	return c.Action(c.Arguments, c.Options)
 }

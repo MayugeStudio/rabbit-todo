@@ -56,7 +56,7 @@ func TestCommand(t *testing.T) {
 			cmd := &Command{
 				Arguments: tt.args.argument,
 				Options:   tt.args.option,
-				Function:  tt.function,
+				Action:    tt.function,
 			}
 			got, err := cmd.Execute()
 			if err != nil {
