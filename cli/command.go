@@ -9,6 +9,6 @@ type Command struct {
 	Function  Func
 }
 
-func (c Command) Execute() (string, error) {
+func (c *Command) Execute() (string, error) {
 	return c.Function(c.Arguments, c.Options)
 }
