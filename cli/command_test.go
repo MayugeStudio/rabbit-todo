@@ -54,9 +54,9 @@ func TestCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := &Command{
-				arguments: tt.args.argument,
-				options:   tt.args.option,
-				function:  tt.function,
+				Arguments: tt.args.argument,
+				Options:   tt.args.option,
+				Function:  tt.function,
 			}
 			got, err := cmd.Execute()
 			if err != nil {
