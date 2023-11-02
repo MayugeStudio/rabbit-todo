@@ -6,14 +6,13 @@ import (
 )
 
 type Action func(args []string, opts []string) (string, error)
-type UsageFunc func() string
 
 type Command struct {
 	Name      string
 	Arguments []string
 	Options   []string
 	Action    Action
-	Usage     UsageFunc
+	Usage     string
 }
 
 func NewCommand(name string, args []string, opts []string, action Action) *Command {
@@ -22,20 +21,22 @@ func NewCommand(name string, args []string, opts []string, action Action) *Comma
 		Arguments: args,
 		Options:   opts,
 		Action:    action,
-		Usage: func() string {
-			var builder strings.Builder
-			builder.WriteString(fmt.Sprintf("Usage: %s", name))
-			if len(args) > 0 {
-				builder.WriteString(" [arguments]")
-			}
-			if len(args) > 0 {
-				builder.WriteString(" [options]")
-			}
-			return builder.String()
-		},
+		Usage:     createUsageString(name, args, opts),
 	}
 }
 
 func (c *Command) Execute() (string, error) {
 	return c.Action(c.Arguments, c.Options)
+}
+
+func createUsageString(commandName string, args []string, opts []string) string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("Usage: %s", commandName))
+	if len(args) > 0 {
+		builder.WriteString(" [arguments]")
+	}
+	if len(opts) > 0 {
+		builder.WriteString(" [options]")
+	}
+	return builder.String()
 }

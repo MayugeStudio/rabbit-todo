@@ -116,3 +116,50 @@ func TestNewCommand(t *testing.T) {
 		})
 	}
 }
+
+func TestCommand_Usage(t *testing.T) {
+	tests := []struct {
+		testName    string
+		commandName string
+		args        []string
+		opts        []string
+		want        string
+	}{
+		{
+			testName:    "test with 1 arg and 1 opt",
+			commandName: "test-command",
+			args:        []string{"Hello"},
+			opts:        []string{"--hello"},
+			want:        "Usage: test-command [arguments] [options]",
+		},
+		{
+			testName:    "test with 2 arg and 2 opt",
+			commandName: "test-command",
+			args:        []string{"Hello", "World"},
+			opts:        []string{"--hello", "--world"},
+			want:        "Usage: test-command [arguments] [options]",
+		},
+		{
+			testName:    "test with 1 arg and 0 opt",
+			commandName: "test-command",
+			args:        []string{"OneArg"},
+			opts:        []string{},
+			want:        "Usage: test-command [arguments]",
+		},
+		{
+			testName:    "test with 0 arg and 1 opt",
+			commandName: "test-command",
+			args:        []string{},
+			opts:        []string{"OneOpt"},
+			want:        "Usage: test-command [options]",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			cmd := NewCommand(tt.commandName, tt.args, tt.opts, nil)
+			if cmd.Usage != tt.want {
+				t.Errorf("got %v, want %v", cmd.Usage, tt.want)
+			}
+		})
+	}
+}
