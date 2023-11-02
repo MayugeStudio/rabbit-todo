@@ -14,7 +14,7 @@ func TestCommand(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		function Func
+		function Action
 		want     string
 	}{
 		{
