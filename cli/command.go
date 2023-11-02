@@ -15,14 +15,29 @@ type Command struct {
 	Usage     string
 }
 
-func NewCommand(name string, args []string, opts []string, action Action) *Command {
+func NewCommand(name string, args []string, opts []string, action Action) (*Command, error) {
+	for _, arg := range args {
+		if len(arg) == 0 {
+			return nil, fmt.Errorf("error: argument must be at least 1 character")
+		}
+	}
+
+	for _, opt := range opts {
+		if len(opt) == 0 {
+			return nil, fmt.Errorf("error: option must be at least 1 character")
+		}
+		if !strings.HasPrefix(opt, "--") {
+			return nil, fmt.Errorf("error: option must be start with `--`")
+		}
+	}
+
 	return &Command{
 		Name:      name,
 		Arguments: args,
 		Options:   opts,
 		Action:    action,
 		Usage:     createUsageString(name, args, opts),
-	}
+	}, nil
 }
 
 func (c *Command) Execute(inputArgs []string, inputOpts []string) (string, error) {

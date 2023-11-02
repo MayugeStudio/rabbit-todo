@@ -29,6 +29,8 @@ func TestNewCommand(t *testing.T) {
 		args        []string
 		opts        []string
 		want        string
+		wantErrStr  string
+		wantErr     bool
 	}{
 		{
 			testName:    "With 1 arg and 1 opt",
@@ -36,6 +38,7 @@ func TestNewCommand(t *testing.T) {
 			args:        []string{"Hello"},
 			opts:        []string{"--hello"},
 			want:        "Usage: test-command [arguments] [options]",
+			wantErr:     false,
 		},
 		{
 			testName:    "With 2 arg and 2 opt",
@@ -43,6 +46,7 @@ func TestNewCommand(t *testing.T) {
 			args:        []string{"Hello", "World"},
 			opts:        []string{"--hello", "--world"},
 			want:        "Usage: test-command [arguments] [options]",
+			wantErr:     false,
 		},
 		{
 			testName:    "With 1 arg and 0 opt",
@@ -50,6 +54,7 @@ func TestNewCommand(t *testing.T) {
 			args:        []string{"OneArg"},
 			opts:        []string{},
 			want:        "Usage: test-command [arguments]",
+			wantErr:     false,
 		},
 		{
 			testName:    "With 0 arg and 1 opt",
@@ -57,27 +62,55 @@ func TestNewCommand(t *testing.T) {
 			args:        []string{},
 			opts:        []string{"--one-opt"},
 			want:        "Usage: test-command [options]",
+			wantErr:     false,
+		},
+		{
+			testName:    "Error: 0 character argument",
+			commandName: "test-command",
+			args:        []string{""},
+			opts:        []string{},
+			wantErrStr:  "error: argument must be at least 1 character",
+			wantErr:     true,
+		},
+		{
+			testName:    "Error: 0 character option",
+			commandName: "test-command",
+			args:        []string{},
+			opts:        []string{""},
+			wantErrStr:  "error: option must be at least 1 character",
+			wantErr:     true,
+		},
+		{
+			testName:    "Error: option must be start with `--`",
+			commandName: "test-command",
+			args:        []string{},
+			opts:        []string{"no-dash-option"},
+			wantErrStr:  "error: option must be start with `--`",
+			wantErr:     true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			cmd := NewCommand(tt.commandName, tt.args, tt.opts, nil)
+			cmd, err := NewCommand(tt.commandName, tt.args, tt.opts, nil)
 
-			if cmd.Name != tt.commandName {
-				t.Errorf("got: name = %v, want %v", cmd.Name, tt.commandName)
-			}
+			checkError(t, tt.testName, err, tt.wantErrStr, tt.wantErr)
+			if !tt.wantErr {
+				if cmd.Name != tt.commandName {
+					t.Errorf("got: name = %v, want %v", cmd.Name, tt.commandName)
+				}
 
-			if !reflect.DeepEqual(cmd.Arguments, tt.args) {
-				t.Errorf("got: arguments = %v, want %v", cmd.Arguments, tt.args)
-			}
+				if !reflect.DeepEqual(cmd.Arguments, tt.args) {
+					t.Errorf("got: arguments = %v, want %v", cmd.Arguments, tt.args)
+				}
 
-			if !reflect.DeepEqual(cmd.Options, tt.opts) {
-				t.Errorf("got: options = %v, want %v", cmd.Options, tt.opts)
-			}
+				if !reflect.DeepEqual(cmd.Options, tt.opts) {
+					t.Errorf("got: options = %v, want %v", cmd.Options, tt.opts)
+				}
 
-			if cmd.Usage != tt.want {
-				t.Errorf("got: %v, want: %v", cmd.Usage, tt.want)
+				if cmd.Usage != tt.want {
+					t.Errorf("got: %v, want: %v", cmd.Usage, tt.want)
+				}
 			}
 		})
 	}
@@ -141,7 +174,10 @@ func TestCommand_Execute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			cmd := NewCommand(tt.commandName, tt.parameters.args, tt.parameters.opts, tt.action)
+			cmd, _ := NewCommand(tt.commandName, tt.parameters.args, tt.parameters.opts, tt.action)
+			if cmd == nil {
+				t.Fatalf("unexpected issue ocurred, got nil from NewCommand()")
+			}
 			got, err := cmd.Execute(tt.input.args, tt.input.opts)
 			checkError(t, tt.testName, err, tt.want, tt.wantError)
 			if !tt.wantError && got != tt.want {
