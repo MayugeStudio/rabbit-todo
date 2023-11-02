@@ -26,6 +26,9 @@ func NewCommand(name string, args []string, opts []string, action Action) *Comma
 }
 
 func (c *Command) Execute(args []string, opts []string) (string, error) {
+	if len(args) != len(c.Arguments) {
+		return "", fmt.Errorf("error: not enough arguments, parameters: %d", len(c.Arguments))
+	}
 	return c.Action(args, opts)
 }
 

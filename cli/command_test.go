@@ -4,6 +4,22 @@ import (
 	"testing"
 )
 
+func checkError(t *testing.T, gotErr error, wantErrStr string, wantErr bool) {
+	t.Helper()
+	if wantErr {
+		if gotErr == nil {
+			t.Fatal("parameters an error but got nil")
+		}
+		if gotErr.Error() != wantErrStr {
+			t.Errorf("got error %q, want %q", gotErr, wantErrStr)
+		}
+	} else {
+		if gotErr != nil {
+			t.Fatalf("parameters no error but got %v", gotErr)
+		}
+	}
+}
+
 func TestNewCommand(t *testing.T) {
 	tests := []struct {
 		testName    string
@@ -100,8 +116,8 @@ func TestCommand_Usage(t *testing.T) {
 }
 
 func TestCommand_Execute(t *testing.T) {
-	var testFunction Action
-	testFunction = func(args []string, opts []string) (string, error) {
+	var testAction Action
+	testAction = func(args []string, opts []string) (string, error) {
 		result := ""
 
 		for _, arg := range args {
@@ -110,39 +126,57 @@ func TestCommand_Execute(t *testing.T) {
 		return result, nil
 	}
 
+	type Parameters struct {
+		args []string
+		opts []string
+	}
+
+	type Input Parameters
+
 	tests := []struct {
-		testName string
-		args     []string
-		opts     []string
-		function Action
-		want     string
+		testName    string
+		commandName string
+		parameters  Parameters
+		input       Input
+		action      Action
+		want        string
+		wantError   bool
 	}{
 		{
-			testName: "3+1",
-			args:     []string{"3", "1"},
-			opts:     []string{},
-			function: testFunction,
-			want:     "31",
+			testName:    "3+1",
+			commandName: "return-4-command",
+			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{}},
+			input:       Input{args: []string{"3", "1"}, opts: []string{}},
+			action:      testAction,
+			want:        "31",
+			wantError:   false,
 		},
 		{
-			testName: "Hello+World",
-			args:     []string{"Hello", "World"},
-			opts:     []string{},
-			function: testFunction,
-			want:     "HelloWorld",
+			testName:    "Hello+World",
+			commandName: "return-HelloWorld-command",
+			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{}},
+			input:       Input{args: []string{"Hello", "World"}, opts: []string{}},
+			action:      testAction,
+			want:        "HelloWorld",
+			wantError:   false,
+		},
+		{
+			testName:    "Not-Enough-Parameters",
+			commandName: "fail-command",
+			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{}},
+			input:       Input{args: []string{"one-arg"}, opts: []string{}},
+			action:      testAction,
+			want:        "error: not enough arguments, parameters: 2",
+			wantError:   true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			cmd := &Command{
-				Action: tt.function,
-			}
-			got, err := cmd.Execute(tt.args, tt.opts)
-			if err != nil {
-				t.Errorf("got: error %v", err)
-			}
-			if got != tt.want {
+			cmd := NewCommand(tt.commandName, tt.parameters.args, tt.parameters.opts, tt.action)
+			got, err := cmd.Execute(tt.input.args, tt.input.opts)
+			checkError(t, err, tt.want, tt.wantError)
+			if !tt.wantError && got != tt.want {
 				t.Errorf("got: %v, want: %v", got, tt.want)
 			}
 		})
