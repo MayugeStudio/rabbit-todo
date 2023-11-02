@@ -58,7 +58,7 @@ func TestCommand(t *testing.T) {
 				options:   tt.args.option,
 				function:  tt.function,
 			}
-			got, err := cmd.function(tt.args.argument, tt.args.option)
+			got, err := cmd.Execute()
 			if err != nil {
 				t.Errorf("got error %v", err)
 			}

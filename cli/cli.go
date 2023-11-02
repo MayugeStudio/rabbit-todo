@@ -7,3 +7,7 @@ type Command struct {
 	options   []string
 	function  Func
 }
+
+func (c Command) Execute() (string, error) {
+	return c.function(c.arguments, c.options)
+}
