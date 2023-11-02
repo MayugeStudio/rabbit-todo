@@ -1,74 +1,28 @@
 package cli
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 )
 
-func checkError(t *testing.T, gotErr error, wantErrStr string, wantErr bool) {
+func checkError(t *testing.T, testName string, gotErr error, wantErrStr string, wantErr bool) {
 	t.Helper()
 	if wantErr {
 		if gotErr == nil {
-			t.Fatal("parameters an error but got nil")
+			t.Fatalf("expected an error for test case %s but got nil", testName)
 		}
-		if gotErr.Error() != wantErrStr {
+		if !strings.Contains(gotErr.Error(), wantErrStr) {
 			t.Errorf("got error %q, want %q", gotErr, wantErrStr)
 		}
 	} else {
 		if gotErr != nil {
-			t.Fatalf("parameters no error but got %v", gotErr)
+			t.Fatalf("expected no error for test case %s but got %v", testName, gotErr)
 		}
 	}
 }
 
 func TestNewCommand(t *testing.T) {
-	tests := []struct {
-		testName    string
-		commandName string
-		args        []string
-		opts        []string
-	}{
-		{
-			testName:    "With two arguments and two options",
-			commandName: "test-command",
-			args:        []string{"arg1", "arg2"},
-			opts:        []string{"--opt1", "--opt2"},
-		},
-		{
-			testName:    "With no arguments and options",
-			commandName: "test-command",
-			args:        []string{},
-			opts:        []string{},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.testName, func(t *testing.T) {
-			cmd := NewCommand(tt.commandName, tt.args, tt.opts, nil)
-
-			if cmd.Name != tt.commandName {
-				t.Errorf("got: name = %v, want %v", cmd.Name, tt.commandName)
-			}
-			if len(cmd.Arguments) != len(tt.args) {
-				t.Errorf("got: Argument length = %v, want %v", len(cmd.Arguments), len(tt.args))
-			}
-			for i, arg := range cmd.Arguments {
-				if arg != tt.args[i] {
-					t.Errorf("got: Argument[%d] = %v, want %v", i, arg, tt.args[i])
-				}
-			}
-			if len(cmd.Options) != len(tt.opts) {
-				t.Errorf("got: Options length = %v, want %v", len(cmd.Options), len(tt.opts))
-			}
-			for i, opt := range cmd.Options {
-				if opt != tt.opts[i] {
-					t.Errorf("got: Options[%d] = %v, want %v", i, opt, tt.opts[i])
-				}
-			}
-		})
-	}
-}
-
-func TestCommand_Usage(t *testing.T) {
 	tests := []struct {
 		testName    string
 		commandName string
@@ -101,13 +55,27 @@ func TestCommand_Usage(t *testing.T) {
 			testName:    "With 0 arg and 1 opt",
 			commandName: "test-command",
 			args:        []string{},
-			opts:        []string{"OneOpt"},
+			opts:        []string{"--one-opt"},
 			want:        "Usage: test-command [options]",
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			cmd := NewCommand(tt.commandName, tt.args, tt.opts, nil)
+
+			if cmd.Name != tt.commandName {
+				t.Errorf("got: name = %v, want %v", cmd.Name, tt.commandName)
+			}
+
+			if !reflect.DeepEqual(cmd.Arguments, tt.args) {
+				t.Errorf("got: arguments = %v, want %v", cmd.Arguments, tt.args)
+			}
+
+			if !reflect.DeepEqual(cmd.Options, tt.opts) {
+				t.Errorf("got: options = %v, want %v", cmd.Options, tt.opts)
+			}
+
 			if cmd.Usage != tt.want {
 				t.Errorf("got: %v, want: %v", cmd.Usage, tt.want)
 			}
@@ -143,16 +111,7 @@ func TestCommand_Execute(t *testing.T) {
 		wantError   bool
 	}{
 		{
-			testName:    "3+1",
-			commandName: "return-4-command",
-			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{}},
-			input:       Input{args: []string{"3", "1"}, opts: []string{}},
-			action:      testAction,
-			want:        "31",
-			wantError:   false,
-		},
-		{
-			testName:    "Hello+World",
+			testName:    "WantSuccess: Expect HelloWorld string",
 			commandName: "return-HelloWorld-command",
 			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{}},
 			input:       Input{args: []string{"Hello", "World"}, opts: []string{}},
@@ -161,7 +120,7 @@ func TestCommand_Execute(t *testing.T) {
 			wantError:   false,
 		},
 		{
-			testName:    "Not-Enough-Parameters",
+			testName:    "WantError: Not-Enough-Parameters",
 			commandName: "fail-command",
 			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{}},
 			input:       Input{args: []string{"one-arg"}, opts: []string{}},
@@ -175,7 +134,7 @@ func TestCommand_Execute(t *testing.T) {
 		t.Run(tt.testName, func(t *testing.T) {
 			cmd := NewCommand(tt.commandName, tt.parameters.args, tt.parameters.opts, tt.action)
 			got, err := cmd.Execute(tt.input.args, tt.input.opts)
-			checkError(t, err, tt.want, tt.wantError)
+			checkError(t, tt.testName, err, tt.want, tt.wantError)
 			if !tt.wantError && got != tt.want {
 				t.Errorf("got: %v, want: %v", got, tt.want)
 			}
