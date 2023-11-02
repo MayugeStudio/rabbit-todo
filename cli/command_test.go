@@ -128,6 +128,15 @@ func TestCommand_Execute(t *testing.T) {
 			want:        "error: not enough arguments, parameters: 2",
 			wantError:   true,
 		},
+		{
+			testName:    "WantError: Too-Many-Options",
+			commandName: "fail-command",
+			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{"--option-1"}},
+			input:       Input{args: []string{"Hello", "World"}, opts: []string{"--input-option-1", "--input-option-2"}},
+			action:      testAction,
+			want:        "error: too many options",
+			wantError:   true,
+		},
 	}
 
 	for _, tt := range tests {
