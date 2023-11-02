@@ -120,12 +120,12 @@ func TestCommand_Execute(t *testing.T) {
 			wantError:   false,
 		},
 		{
-			testName:    "WantError: Not-Enough-Parameters",
+			testName:    "WantError: Not-Enough-Arguments",
 			commandName: "fail-command",
 			parameters:  Parameters{args: []string{"a", "b"}, opts: []string{}},
 			input:       Input{args: []string{"one-arg"}, opts: []string{}},
 			action:      testAction,
-			want:        "error: not enough arguments, parameters: 2",
+			want:        "error: not enough arguments, expected: 2, got: 1",
 			wantError:   true,
 		},
 		{
