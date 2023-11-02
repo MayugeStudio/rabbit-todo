@@ -25,8 +25,8 @@ func NewCommand(name string, args []string, opts []string, action Action) *Comma
 	}
 }
 
-func (c *Command) Execute() (string, error) {
-	return c.Action(c.Arguments, c.Options)
+func (c *Command) Execute(args []string, opts []string) (string, error) {
+	return c.Action(args, opts)
 }
 
 func createUsageString(commandName string, args []string, opts []string) string {

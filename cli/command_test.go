@@ -1,69 +1,54 @@
 package cli
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
 )
 
 func TestCommand_Execute(t *testing.T) {
-	type args struct {
-		argument []string
-		option   []string
+	var testFunction Action
+	testFunction = func(args []string, opts []string) (string, error) {
+		result := ""
+
+		for _, arg := range args {
+			result += arg
+		}
+		return result, nil
 	}
+
 	tests := []struct {
-		name     string
-		args     args
+		testName string
+		args     []string
+		opts     []string
 		function Action
 		want     string
 	}{
 		{
-			name: "3+1",
-			args: args{
-				argument: []string{"3", "1"},
-				option:   nil,
-			},
-			function: func(args []string, _ []string) (string, error) {
-				a, err := strconv.Atoi(args[0])
-				if err != nil {
-					return "", err
-				}
-				b, err := strconv.Atoi(args[1])
-				if err != nil {
-					return "", err
-				}
-				return strconv.Itoa(a + b), nil
-			},
-			want: "4",
+			testName: "3+1",
+			args:     []string{"3", "1"},
+			opts:     []string{},
+			function: testFunction,
+			want:     "31",
 		},
 		{
-			name: "Hello+World",
-			args: args{
-				argument: []string{"Hello", "World"},
-				option:   nil,
-			},
-			function: func(args []string, _ []string) (string, error) {
-				a := args[0]
-				b := args[1]
-				return fmt.Sprintf("%s %s", a, b), nil
-			},
-			want: "Hello World",
+			testName: "Hello+World",
+			args:     []string{"Hello", "World"},
+			opts:     []string{},
+			function: testFunction,
+			want:     "HelloWorld",
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.testName, func(t *testing.T) {
 			cmd := &Command{
-				Arguments: tt.args.argument,
-				Options:   tt.args.option,
-				Action:    tt.function,
+				Action: tt.function,
 			}
-			got, err := cmd.Execute()
+			got, err := cmd.Execute(tt.args, tt.opts)
 			if err != nil {
-				t.Errorf("got error %v", err)
+				t.Errorf("got: error %v", err)
 			}
 			if got != tt.want {
-				t.Errorf("got %v, want %v", got, tt.want)
+				t.Errorf("got: %v, length: %d, want: %v, length: %d", got, len(got), tt.want, len(tt.want))
 			}
 		})
 	}
