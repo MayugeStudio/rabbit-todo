@@ -8,7 +8,7 @@ type Option struct {
 	IsFlag bool
 }
 
-func NewOption(name string, tp ParameterType, isFlag bool) *Option {
+func NewOption(name string, tp ParameterType) *Option {
 	if len(name) == 0 {
 		return nil
 	}
@@ -18,6 +18,20 @@ func NewOption(name string, tp ParameterType, isFlag bool) *Option {
 	return &Option{
 		Name:   name,
 		Type:   tp,
-		IsFlag: isFlag,
+		IsFlag: false,
+	}
+}
+
+func NewFlagOption(name string) *Option {
+	if len(name) == 0 {
+		return nil
+	}
+	if !strings.HasPrefix(name, "--") {
+		return nil
+	}
+	return &Option{
+		Name:   name,
+		Type:   BOOL,
+		IsFlag: true,
 	}
 }

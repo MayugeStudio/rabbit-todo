@@ -9,7 +9,6 @@ func TestNewOption(t *testing.T) {
 	type args struct {
 		optName string
 		optType ParameterType
-		isFlag  bool
 	}
 	tests := []struct {
 		testName string
@@ -21,7 +20,6 @@ func TestNewOption(t *testing.T) {
 			args: args{
 				optName: "--int-type-opt",
 				optType: INT,
-				isFlag:  false,
 			},
 			want: &Option{
 				Name:   "--int-type-opt",
@@ -34,7 +32,6 @@ func TestNewOption(t *testing.T) {
 			args: args{
 				optName: "--str-type-opt",
 				optType: STRING,
-				isFlag:  false,
 			},
 			want: &Option{
 				Name:   "--str-type-opt",
@@ -47,7 +44,6 @@ func TestNewOption(t *testing.T) {
 			args: args{
 				optName: "--bool-type-opt",
 				optType: BOOL,
-				isFlag:  false,
 			},
 			want: &Option{
 				Name:   "--bool-type-opt",
@@ -60,7 +56,6 @@ func TestNewOption(t *testing.T) {
 			args: args{
 				optName: "",
 				optType: BOOL,
-				isFlag:  false,
 			},
 			want: nil,
 		},
@@ -69,15 +64,52 @@ func TestNewOption(t *testing.T) {
 			args: args{
 				optName: "invalid-opt-name",
 				optType: BOOL,
-				isFlag:  false,
 			},
 			want: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			if got := NewOption(tt.args.optName, tt.args.optType, tt.args.isFlag); !reflect.DeepEqual(got, tt.want) {
+			if got := NewOption(tt.args.optName, tt.args.optType); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewOption() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewFlagOption(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		testName string
+		args     args
+		want     *Option
+	}{
+		{
+			testName: "Test-Success-CreateFlagOption",
+			args:     args{name: "--simple-option"},
+			want: &Option{
+				Name:   "--simple-option",
+				Type:   BOOL,
+				IsFlag: true,
+			},
+		},
+		{
+			testName: "Test-Fail-InvalidOptName-ZeroLength",
+			args:     args{name: ""},
+			want:     nil,
+		},
+		{
+			testName: "Test-Fail-InvalidOptName-NotStartWithDoubleDash",
+			args:     args{name: "invalid-opt-name"},
+			want:     nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			if got := NewFlagOption(tt.args.name); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewFlagOption() = %v, want %v", got, tt.want)
 			}
 		})
 	}
