@@ -25,14 +25,31 @@ func NewCommand(name string, args []*Argument, opts []*Option, action Action) *C
 	}
 }
 
-func (c *Command) Execute(inputArgs []string, inputOpts []string) (string, error) {
-	if len(inputArgs) != len(c.Arguments) {
-		return "", fmt.Errorf("not enough arguments, expected: %d, got: %d", len(c.Arguments), len(inputArgs))
+func (c *Command) Execute(inputParams []string) (string, error) {
+	var (
+		actualArgs []string
+		actualOpts []string
+	)
+
+	for _, param := range inputParams {
+		if strings.HasPrefix(param, "--") {
+			actualOpts = append(actualOpts, param)
+		} else {
+			actualArgs = append(actualArgs, param)
+		}
 	}
-	if len(inputOpts) > len(c.Options) {
+
+	if len(actualArgs) < len(c.Arguments) {
+		return "", fmt.Errorf("not enough arguments")
+	} else if len(actualArgs) > len(c.Arguments) {
+		return "", fmt.Errorf("too many arguments")
+	}
+
+	if len(actualOpts) > len(c.Options) {
 		return "", fmt.Errorf("too many options")
 	}
-	return c.Action(inputArgs, inputOpts)
+
+	return c.Action(actualArgs, actualOpts)
 }
 
 func createUsageString(commandName string, args []*Argument, opts []*Option) string {

@@ -111,45 +111,28 @@ func TestNewCommand(t *testing.T) {
 
 func TestCommand_Execute(t *testing.T) {
 	var testAction Action
-	testAction = func(args []string, opts []string) (string, error) {
-		result := ""
+	testAction = func(args []string, opts []string) (string, error) { return strings.Join(args, ""), nil }
 
-		for _, arg := range args {
-			result += arg
-		}
-		return result, nil
+	type inputType struct {
+		command     Command
+		inputParams []string
 	}
 
-	type Parameters struct {
-		arguments []*Argument
-		options   []*Option
+	type testCase struct {
+		testName   string
+		input      inputType
+		want       string
+		wantErr    bool
+		wantErrStr string
 	}
 
-	type Input struct {
-		arguments []string
-		options   []string
-	}
-
-	type args struct {
-		commandName string
-		parameters  Parameters
-		input       Input
-		action      Action
-		wantErr     bool
-		wantErrStr  string
-	}
-
-	tests := []struct {
-		testName string
-		args     args
-		want     string
-	}{
+	tests := []testCase{
 		{
-			testName: "WantSuccess: Expect HelloWorld string",
-			args: args{
-				commandName: "return-HelloWorld-command",
-				parameters: Parameters{
-					arguments: []*Argument{
+			testName: "Test-Ok-HelloWorld",
+			input: inputType{
+				command: Command{
+					Name: "return-HelloWorld-command",
+					Arguments: []*Argument{
 						{
 							Name: "a",
 							Type: STRING,
@@ -159,97 +142,87 @@ func TestCommand_Execute(t *testing.T) {
 							Type: STRING,
 						},
 					},
-					options: []*Option{},
+					Options: []*Option{},
+					Action:  testAction,
+					Usage:   "",
 				},
-				input: Input{
-					arguments: []string{"Hello", "World"},
-					options:   []string{},
-				},
-				action:  testAction,
-				wantErr: false,
+				inputParams: []string{"Hello", "World"},
 			},
-			want: "HelloWorld",
+			want:       "HelloWorld",
+			wantErr:    false,
+			wantErrStr: "",
 		},
 		{
-			testName: "WantError: Not-Enough-Arguments",
-			args: args{
-				commandName: "fail-command",
-				parameters: Parameters{
-					arguments: []*Argument{
+			testName: "Test-Fail-NotEnoughArguments",
+			input: inputType{
+				command: Command{
+					Name: "fail-command",
+					Arguments: []*Argument{
 						{
 							Name: "arg1",
-							Type: STRING,
+							Type: INT,
 						},
 						{
 							Name: "arg2",
 							Type: STRING,
 						},
 					},
-					options: []*Option{},
+					Options: []*Option{},
+					Action:  testAction,
+					Usage:   "",
 				},
-				input: Input{
-					arguments: []string{"one-arg"},
-					options:   []string{},
-				},
-				action:     testAction,
-				wantErr:    true,
-				wantErrStr: "not enough arguments, expected: 2, got: 1",
+				inputParams: []string{"one-arg"},
 			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "not enough arguments",
 		},
 		{
-			testName: "WantError: Too-Many-Options",
-			args: args{
-				commandName: "fail-command",
-				parameters: Parameters{
-					arguments: []*Argument{
+			testName: "Test-Fail-TooManyOptions",
+			input: inputType{
+				command: Command{
+					Name:      "fail-command",
+					Arguments: []*Argument{},
+					Options: []*Option{
 						{
-							Name: "a",
-							Type: STRING,
+							Name:   "--opt-1",
+							Type:   INT,
+							IsFlag: false,
 						},
 						{
-							Name: "b",
-							Type: STRING,
-						},
-					},
-					options: []*Option{
-						{
-							Name:   "--option-1",
-							Type:   STRING,
+							Name:   "--opt-2",
+							Type:   INT,
 							IsFlag: false,
 						},
 					},
+					Action: testAction,
+					Usage:  "",
 				},
-				input: Input{
-					arguments: []string{"Hello", "World"},
-					options:   []string{"--input-option-1", "--input-option-2"},
+				inputParams: []string{
+					"--opt-1",
+					"--opt-2",
+					"--opt-3",
 				},
-				action:     testAction,
-				wantErr:    true,
-				wantErrStr: "too many options",
 			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "too many options",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.testName, func(t *testing.T) {
-			cmd := NewCommand(tt.args.commandName, tt.args.parameters.arguments, tt.args.parameters.options, tt.args.action)
-			if cmd == nil {
-				t.Fatalf("unexpected issue ocurred, got nil from NewCommand()")
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			got, err := tc.input.command.Execute(tc.input.inputParams)
+			isErr := err != nil
+			if isErr != tc.wantErr {
+				t.Fatalf("Command.Execute() error = %v, wantError %v", err, tc.wantErr)
 			}
-			got, err := cmd.Execute(tt.args.input.arguments, tt.args.input.options)
-			if tt.args.wantErr {
-				// Expected error
-				if err == nil {
-					t.Errorf("Command.Execute() = (%v, nil), want (nil, %q)", got, tt.args.wantErrStr)
+			if tc.wantErr {
+				if err.Error() != tc.wantErrStr {
+					t.Errorf("NewOption() error = %q, wantErrStr %q", err, tc.wantErrStr)
 				}
-				// Error message check
-				if !strings.Contains(err.Error(), tt.args.wantErrStr) {
-					t.Errorf("Command.Execute() = (nil, %q), want (nil, %q)", err, tt.args.wantErrStr)
-				}
-			} else {
-				if got != tt.want {
-					t.Errorf("Command.Execute() = (%v, nil), want (%v, nil)", got, tt.want)
-				}
+			} else if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("Command.Execute() = %v, want %v", got, tc.want)
 			}
 		})
 	}
