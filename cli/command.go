@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type Action func(args []string, opts []string) (string, error)
+type Action func(args []string, opts map[string]OptionValue) (string, error)
 
 type Command struct {
 	Name      string
@@ -15,8 +15,60 @@ type Command struct {
 	Usage     string
 }
 
-func NewCommand(name string, args []*Argument, opts []*Option, action Action) *Command {
-	return &Command{
+// Execute method execute action
+func (c *Command) Execute(inputParams []string) (string, error) {
+	var (
+		args []string
+		opts = make(map[string]OptionValue)
+	)
+
+	for i := 0; i < len(inputParams); i++ {
+		param := inputParams[i]
+		if isOption(param) {
+			optName := param
+			optValue := ""
+			optType := ParameterType(-1)
+			i++
+
+			for _, eOpt := range c.Options {
+				if eOpt.Name == optName {
+					optType = eOpt.Type
+					break
+				}
+			}
+
+			if optType == -1 {
+				return "", fmt.Errorf("invalid option %s", optName)
+			}
+
+			if i < len(inputParams) {
+				optValue = inputParams[i]
+			}
+
+			optName = strings.TrimPrefix(param, "--")
+			ov, err := convertToOptionValue(optValue, optType)
+			if err != nil {
+				return "", err
+			}
+
+			opts[optName] = ov
+
+		} else {
+			args = append(args, param)
+		}
+	}
+
+	if len(args) < len(c.Arguments) {
+		return "", fmt.Errorf("not enough arguments")
+	} else if len(args) > len(c.Arguments) {
+		return "", fmt.Errorf("too many arguments actual %d, expected %d", len(args), len(c.Arguments))
+	}
+
+	return c.Action(args, opts)
+}
+
+func NewCommand(name string, args []*Argument, opts []*Option, action Action) Command {
+	return Command{
 		Name:      name,
 		Arguments: args,
 		Options:   opts,
@@ -25,31 +77,11 @@ func NewCommand(name string, args []*Argument, opts []*Option, action Action) *C
 	}
 }
 
-func (c *Command) Execute(inputParams []string) (string, error) {
-	var (
-		actualArgs []string
-		actualOpts []string
-	)
-
-	for _, param := range inputParams {
-		if strings.HasPrefix(param, "--") {
-			actualOpts = append(actualOpts, param)
-		} else {
-			actualArgs = append(actualArgs, param)
-		}
+func isOption(param string) bool {
+	if strings.HasPrefix(param, "--") {
+		return true
 	}
-
-	if len(actualArgs) < len(c.Arguments) {
-		return "", fmt.Errorf("not enough arguments")
-	} else if len(actualArgs) > len(c.Arguments) {
-		return "", fmt.Errorf("too many arguments")
-	}
-
-	if len(actualOpts) > len(c.Options) {
-		return "", fmt.Errorf("too many options")
-	}
-
-	return c.Action(actualArgs, actualOpts)
+	return false
 }
 
 func createUsageString(commandName string, args []*Argument, opts []*Option) string {

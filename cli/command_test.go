@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -119,9 +120,8 @@ func TestNewCommand(t *testing.T) {
 	}
 }
 
-func TestCommand_Execute(t *testing.T) {
-	var testAction Action
-	testAction = func(args []string, opts []string) (string, error) { return strings.Join(args, ""), nil }
+func TestCommand_Execute_With_Arguments(t *testing.T) {
+	testAction := func(args []string, opts map[string]OptionValue) (string, error) { return strings.Join(args, ""), nil }
 
 	type inputType struct {
 		command     Command
@@ -188,7 +188,7 @@ func TestCommand_Execute(t *testing.T) {
 			wantErrStr: "not enough arguments",
 		},
 		{
-			testName: "Test-Fail-TooManyOptions",
+			testName: "Test-Fail-InvalidOption",
 			input: inputType{
 				command: Command{
 					Name:      "fail-command",
@@ -209,14 +209,102 @@ func TestCommand_Execute(t *testing.T) {
 					Usage:  "",
 				},
 				inputParams: []string{
-					"--opt-1",
-					"--opt-2",
-					"--opt-3",
+					"--opt-1", "1",
+					"--opt-2", "2",
+					"--opt-3", "3",
 				},
 			},
 			want:       "",
 			wantErr:    true,
-			wantErrStr: "too many options",
+			wantErrStr: "invalid option --opt-3",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			got, err := tc.input.command.Execute(tc.input.inputParams)
+			isErr := err != nil
+			if isErr != tc.wantErr {
+				t.Fatalf("Command.Execute() error = %v, wantError %v", err, tc.wantErr)
+			}
+			if tc.wantErr {
+				if err.Error() != tc.wantErrStr {
+					t.Errorf("Command.Execute() error = %q, wantErrStr %q", err, tc.wantErrStr)
+				}
+			} else if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("Command.Execute() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestCommand_Execute_With_Options(t *testing.T) {
+	testActionAddStrings := func(args []string, opts map[string]OptionValue) (string, error) {
+		var opt OptionValue
+		opt = opts["opt1"]
+		arg1 := opt.StringVal
+
+		opt = opts["opt2"]
+		arg2 := opt.StringVal
+		return arg1 + arg2, nil
+	}
+	testActionAddIntegers := func(args []string, opts map[string]OptionValue) (string, error) {
+		var opt OptionValue
+		opt = opts["opt1"]
+		arg1 := opt.IntVal
+
+		opt = opts["opt2"]
+		arg2 := opt.IntVal
+		return fmt.Sprintf("%d", arg1+arg2), nil
+	}
+
+	type inputType struct {
+		command     Command
+		inputParams []string
+	}
+
+	type testCase struct {
+		testName   string
+		input      inputType
+		want       string
+		wantErr    bool
+		wantErrStr string
+	}
+
+	tests := []testCase{
+		{
+			testName: "Test-Ok-WithTwoStringOptionCommand",
+			input: inputType{
+				command: NewCommand(
+					"two-option-command",
+					[]*Argument{},
+					[]*Option{
+						{Name: "--opt1", Type: STRING, IsFlag: false},
+						{Name: "--opt2", Type: STRING, IsFlag: false},
+					},
+					testActionAddStrings),
+				inputParams: []string{"--opt1", "Hello", "--opt2", "World"},
+			},
+			want:       "HelloWorld",
+			wantErr:    false,
+			wantErrStr: "",
+		},
+		{
+			testName: "Test-Ok-WithTwoIntegerOptionCommand",
+			input: inputType{
+				command: NewCommand(
+					"two-option-command",
+					[]*Argument{},
+					[]*Option{
+						{Name: "--opt1", Type: INT, IsFlag: false},
+						{Name: "--opt2", Type: INT, IsFlag: false},
+					},
+					testActionAddIntegers),
+				inputParams: []string{"--opt1", "1", "--opt2", "2"},
+			},
+			want:       "3",
+			wantErr:    false,
+			wantErrStr: "",
 		},
 	}
 
