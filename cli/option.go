@@ -9,10 +9,7 @@ type Option struct {
 }
 
 func NewOption(name string, tp ParameterType) *Option {
-	if len(name) == 0 {
-		return nil
-	}
-	if !strings.HasPrefix(name, "--") {
+	if !isValidOption(name) {
 		return nil
 	}
 	return &Option{
@@ -23,10 +20,7 @@ func NewOption(name string, tp ParameterType) *Option {
 }
 
 func NewFlagOption(name string) *Option {
-	if len(name) == 0 {
-		return nil
-	}
-	if !strings.HasPrefix(name, "--") {
+	if !isValidOption(name) {
 		return nil
 	}
 	return &Option{
@@ -34,4 +28,14 @@ func NewFlagOption(name string) *Option {
 		Type:   BOOL,
 		IsFlag: true,
 	}
+}
+
+func isValidOption(name string) bool {
+	if len(name) == 0 {
+		return false
+	}
+	if !strings.HasPrefix(name, "--") {
+		return false
+	}
+	return true
 }
