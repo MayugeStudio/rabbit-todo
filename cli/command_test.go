@@ -7,80 +7,91 @@ import (
 )
 
 func TestNewCommand(t *testing.T) {
+	type args struct {
+		commandName string
+		arguments   []*Argument
+		options     []*Option
+	}
 	tests := []struct {
-		testName     string
-		commandName  string
-		args         []*Argument
-		opts         []*Option
-		wantUsageStr string
+		testName string
+		args     args
+		want     string
 	}{
 		{
-			testName:     "With 1 arg and 1 opt",
-			commandName:  "test-command",
-			args:         []*Argument{{Name: "Hello", Type: STRING}},
-			opts:         []*Option{{Name: "--hello", Type: STRING}},
-			wantUsageStr: "Usage: test-command [arguments] [options]",
+			testName: "With 1 arg and 1 opt",
+			args: args{
+				commandName: "test-command",
+				arguments:   []*Argument{{Name: "Hello", Type: STRING}},
+				options:     []*Option{{Name: "--hello", Type: STRING}},
+			},
+			want: "Usage: test-command [arguments] [options]",
 		},
 		{
-			testName:    "With 2 arg and 2 opt",
-			commandName: "test-command",
-			args: []*Argument{
-				{
-					Name: "Hello",
-					Type: STRING,
+			testName: "With 2 arg and 2 opt",
+			args: args{
+				commandName: "test-command",
+				arguments: []*Argument{
+					{
+						Name: "Hello",
+						Type: STRING,
+					},
+					{
+						Name: "World",
+						Type: STRING,
+					},
 				},
-				{
-					Name: "World",
-					Type: STRING,
+				options: []*Option{
+					NewOption("--hello", STRING),
+					NewOption("--world", STRING),
 				},
 			},
-			opts: []*Option{
-				NewOption("--hello", STRING),
-				NewOption("--world", STRING),
-			},
-			wantUsageStr: "Usage: test-command [arguments] [options]",
+			want: "Usage: test-command [arguments] [options]",
 		},
 		{
-			testName:    "With 1 arg and 0 opt",
-			commandName: "test-command",
-			args: []*Argument{
-				{
-					Name: "OneArg",
-					Type: STRING,
+			testName: "With 1 arg and 0 opt",
+			args: args{
+				commandName: "test-command",
+				arguments: []*Argument{
+					{
+						Name: "OneArg",
+						Type: STRING,
+					},
 				},
+				options: []*Option{},
 			},
-			opts:         []*Option{},
-			wantUsageStr: "Usage: test-command [arguments]",
+			want: "Usage: test-command [arguments]",
 		},
 		{
-			testName:    "With 0 arg and 1 opt",
-			commandName: "test-command",
-			args:        []*Argument{},
-			opts: []*Option{
-				NewOption("--one-arg", STRING),
+			testName: "With 0 arg and 1 opt",
+			args: args{
+				commandName: "test-command",
+				arguments:   []*Argument{},
+				options: []*Option{
+					NewOption("--one-arg", STRING),
+				},
 			},
-			wantUsageStr: "Usage: test-command [options]",
+			want: "Usage: test-command [options]",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			got := NewCommand(tt.commandName, tt.args, tt.opts, nil)
+			got := NewCommand(tt.args.commandName, tt.args.arguments, tt.args.options, nil)
 
-			if got.Name != tt.commandName {
-				t.Errorf("got: name = %v, want %v", got.Name, tt.commandName)
+			if got.Name != tt.args.commandName {
+				t.Errorf("NewCommand().Name = %v, want %v", got.Name, tt.args.commandName)
 			}
 
-			if !reflect.DeepEqual(got.Arguments, tt.args) {
-				t.Errorf("got: arguments = %v, want %v", got.Arguments, tt.args)
+			if !reflect.DeepEqual(got.Arguments, tt.args.arguments) {
+				t.Errorf("NewCommand().Arguments = %v, want %v", got.Arguments, tt.args.arguments)
 			}
 
-			if !reflect.DeepEqual(got.Options, tt.opts) {
-				t.Errorf("got: options = %v, want %v", got.Options, tt.opts)
+			if !reflect.DeepEqual(got.Options, tt.args.options) {
+				t.Errorf("NewCommand().Options = %v, want %v", got.Options, tt.args.options)
 			}
 
-			if got.Usage != tt.wantUsageStr {
-				t.Errorf("got: %v, want: %v", got.Usage, tt.wantUsageStr)
+			if got.Usage != tt.want {
+				t.Errorf("NewCommand().Usage = %v, want %v", got.Usage, tt.want)
 			}
 		})
 	}
@@ -98,120 +109,130 @@ func TestCommand_Execute(t *testing.T) {
 	}
 
 	type Parameters struct {
-		args []*Argument
-		opts []*Option
+		arguments []*Argument
+		options   []*Option
 	}
 
 	type Input struct {
-		args []string
-		opts []string
+		arguments []string
+		options   []string
 	}
 
-	tests := []struct {
-		testName    string
+	type args struct {
 		commandName string
 		parameters  Parameters
 		input       Input
 		action      Action
-		wantResult  string
 		wantErr     bool
 		wantErrStr  string
+	}
+
+	tests := []struct {
+		testName string
+		args     args
+		want     string
 	}{
 		{
-			testName:    "WantSuccess: Expect HelloWorld string",
-			commandName: "return-HelloWorld-command",
-			parameters: Parameters{
-				args: []*Argument{
-					{
-						Name: "a",
-						Type: STRING,
+			testName: "WantSuccess: Expect HelloWorld string",
+			args: args{
+				commandName: "return-HelloWorld-command",
+				parameters: Parameters{
+					arguments: []*Argument{
+						{
+							Name: "a",
+							Type: STRING,
+						},
+						{
+							Name: "b",
+							Type: STRING,
+						},
 					},
-					{
-						Name: "b",
-						Type: STRING,
-					},
+					options: []*Option{},
 				},
-				opts: []*Option{},
+				input: Input{
+					arguments: []string{"Hello", "World"},
+					options:   []string{},
+				},
+				action:  testAction,
+				wantErr: false,
 			},
-			input: Input{
-				args: []string{"Hello", "World"},
-				opts: []string{},
-			},
-			action:     testAction,
-			wantResult: "HelloWorld",
-			wantErr:    false,
+			want: "HelloWorld",
 		},
 		{
-			testName:    "WantError: Not-Enough-Arguments",
-			commandName: "fail-command",
-			parameters: Parameters{
-				args: []*Argument{
-					{
-						Name: "arg1",
-						Type: STRING,
+			testName: "WantError: Not-Enough-Arguments",
+			args: args{
+				commandName: "fail-command",
+				parameters: Parameters{
+					arguments: []*Argument{
+						{
+							Name: "arg1",
+							Type: STRING,
+						},
+						{
+							Name: "arg2",
+							Type: STRING,
+						},
 					},
-					{
-						Name: "arg2",
-						Type: STRING,
-					},
+					options: []*Option{},
 				},
-				opts: []*Option{},
+				input: Input{
+					arguments: []string{"one-arg"},
+					options:   []string{},
+				},
+				action:     testAction,
+				wantErr:    true,
+				wantErrStr: "not enough arguments, expected: 2, got: 1",
 			},
-			input: Input{
-				args: []string{"one-arg"},
-				opts: []string{},
-			},
-			action:     testAction,
-			wantErr:    true,
-			wantErrStr: "not enough arguments, expected: 2, got: 1",
 		},
 		{
-			testName:    "WantError: Too-Many-Options",
-			commandName: "fail-command",
-			parameters: Parameters{
-				args: []*Argument{
-					{
-						Name: "a",
-						Type: STRING,
+			testName: "WantError: Too-Many-Options",
+			args: args{
+				commandName: "fail-command",
+				parameters: Parameters{
+					arguments: []*Argument{
+						{
+							Name: "a",
+							Type: STRING,
+						},
+						{
+							Name: "b",
+							Type: STRING,
+						},
 					},
-					{
-						Name: "b",
-						Type: STRING,
+					options: []*Option{
+						NewOption("--option-1", STRING),
 					},
 				},
-				opts: []*Option{
-					NewOption("--option-1", STRING),
+				input: Input{
+					arguments: []string{"Hello", "World"},
+					options:   []string{"--input-option-1", "--input-option-2"},
 				},
+				action:     testAction,
+				wantErr:    true,
+				wantErrStr: "too many options",
 			},
-			input: Input{
-				args: []string{"Hello", "World"},
-				opts: []string{"--input-option-1", "--input-option-2"},
-			},
-			action:     testAction,
-			wantErr:    true,
-			wantErrStr: "too many options",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			cmd := NewCommand(tt.commandName, tt.parameters.args, tt.parameters.opts, tt.action)
+			cmd := NewCommand(tt.args.commandName, tt.args.parameters.arguments, tt.args.parameters.options, tt.args.action)
 			if cmd == nil {
 				t.Fatalf("unexpected issue ocurred, got nil from NewCommand()")
 			}
-			got, err := cmd.Execute(tt.input.args, tt.input.opts)
-			if tt.wantErr {
+			got, err := cmd.Execute(tt.args.input.arguments, tt.args.input.options)
+			if tt.args.wantErr {
 				// Expected error
 				if err == nil {
-					t.Errorf("got nil, want %q", tt.wantErrStr)
+					t.Errorf("Command.Execute() = (%v, nil), want (nil, %q)", got, tt.args.wantErrStr)
 				}
 				// Error message check
-				if !strings.Contains(err.Error(), tt.wantErrStr) {
-					t.Errorf("got %q, want %q", err, tt.wantErrStr)
+				if !strings.Contains(err.Error(), tt.args.wantErrStr) {
+					t.Errorf("Command.Execute() = (nil, %q), want (nil, %q)", err, tt.args.wantErrStr)
 				}
 			} else {
-				if got != tt.wantResult {
-					t.Errorf("got: %v, want: %v", got, tt.wantResult)
+				if got != tt.want {
+					t.Errorf("Command.Execute() = (%v, nil), want (%v, nil)", got, tt.want)
 				}
 			}
 		})
