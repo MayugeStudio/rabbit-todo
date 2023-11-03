@@ -55,7 +55,7 @@ func TestNewArgument(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-Fail-InvalidArgName-ZeroLength",
+			testName: "Test-Fail-InvalidArgName-Empty",
 			args: args{
 				argName:    "",
 				argType:    BOOL,
@@ -64,7 +64,7 @@ func TestNewArgument(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-Fail-InvalidArgName-DoubleDashPrefix",
+			testName: "Test-Fail-InvalidArgName-StartWithDoubleDash",
 			args: args{
 				argName:    "--invalid-arg-name",
 				argType:    BOOL,
