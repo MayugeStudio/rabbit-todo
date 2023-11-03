@@ -2,91 +2,95 @@ package cli
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 )
 
 func TestNewArgument(t *testing.T) {
-	type args struct {
-		argName    string
-		argType    ParameterType
+	type inputType struct {
+		argName string
+		argType ParameterType
+	}
+	type testCase struct {
+		testName   string
+		input      inputType
+		want       *Argument
 		wantErr    bool
 		wantErrStr string
 	}
-	tests := []struct {
-		testName string
-		args     args
-		want     *Argument
-	}{
+	tests := []testCase{
 		{
 			testName: "Test-Ok-IntTypeArg",
-			args: args{
+			input: inputType{
 				argName: "intTypeArg",
 				argType: INT,
-				wantErr: false,
 			},
 			want: &Argument{
 				Name: "intTypeArg",
 				Type: INT,
 			},
+			wantErr:    false,
+			wantErrStr: "",
 		},
 		{
 			testName: "Test-Ok-StrTypeArg",
-			args: args{
+			input: inputType{
 				argName: "strTypeArg",
 				argType: STRING,
-				wantErr: false,
 			},
 			want: &Argument{
 				Name: "strTypeArg",
 				Type: STRING,
 			},
+			wantErr:    false,
+			wantErrStr: "",
 		},
 		{
 			testName: "Test-Ok-BoolTypeArg",
-			args: args{
+			input: inputType{
 				argName: "boolTypeArg",
 				argType: BOOL,
-				wantErr: false,
 			},
 			want: &Argument{
 				Name: "boolTypeArg",
 				Type: BOOL,
 			},
+			wantErr:    false,
+			wantErrStr: "",
 		},
 		{
 			testName: "Test-Fail-InvalidArgName-Empty",
-			args: args{
-				argName:    "",
-				argType:    BOOL,
-				wantErr:    true,
-				wantErrStr: "name must not be empty",
+			input: inputType{
+				argName: "",
+				argType: BOOL,
 			},
+			want:       nil,
+			wantErr:    true,
+			wantErrStr: "name must not be empty",
 		},
 		{
 			testName: "Test-Fail-InvalidArgName-StartWithDoubleDash",
-			args: args{
-				argName:    "--invalid-arg-name",
-				argType:    BOOL,
-				wantErr:    true,
-				wantErrStr: "name must not start with '--'",
+			input: inputType{
+				argName: "--invalid-arg-name",
+				argType: BOOL,
 			},
+			want:       nil,
+			wantErr:    true,
+			wantErrStr: "name must not start with '--'",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.testName, func(t *testing.T) {
-			got, err := NewArgument(tt.args.argName, tt.args.argType)
-			if tt.args.wantErr {
-				if err == nil {
-					t.Errorf("NewArgument() = (%v, %q), want (nil, %q)", got, err, tt.args.wantErrStr)
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			got, err := NewArgument(tc.input.argName, tc.input.argType)
+			isErr := err != nil
+			if isErr != tc.wantErr {
+				t.Fatalf("NewArgument() error = %v, wantError %v", err, tc.wantErr)
+			}
+			if tc.wantErr {
+				if err.Error() != tc.wantErrStr {
+					t.Errorf("NewArgument() error = %q, wantErrStr %q", err, tc.wantErrStr)
 				}
-				if !strings.Contains(err.Error(), tt.args.wantErrStr) {
-					t.Errorf("NewArgument() = (%v, %q), want (nil, %q)", got, err, tt.args.wantErrStr)
-				}
-			} else {
-				if !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("NewArgument() = (%v, nil), want (%v, nil)", got, tt.want)
-				}
+			} else if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("NewArgument() = %v, want %v", got, tc.want)
 			}
 		})
 	}

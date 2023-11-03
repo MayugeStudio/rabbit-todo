@@ -2,116 +2,115 @@ package cli
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 )
 
 func TestNewOption(t *testing.T) {
-	type args struct {
-		optName    string
-		optType    ParameterType
+	type inputType struct {
+		optName string
+		optType ParameterType
+	}
+	type testCase struct {
+		testName   string
+		input      inputType
+		want       *Option
 		wantErr    bool
 		wantErrStr string
 	}
-	tests := []struct {
-		testName string
-		args     args
-		want     *Option
-	}{
+	tests := []testCase{
 		{
 			testName: "Test-Ok-IntTypeOpt",
-			args: args{
+			input: inputType{
 				optName: "--int-type-opt",
 				optType: INT,
-				wantErr: false,
 			},
 			want: &Option{
 				Name:   "--int-type-opt",
 				Type:   INT,
 				IsFlag: false,
 			},
+			wantErr:    false,
+			wantErrStr: "",
 		},
 		{
 			testName: "Test-Ok-StrTypeOpt",
-			args: args{
+			input: inputType{
 				optName: "--str-type-opt",
 				optType: STRING,
-				wantErr: false,
 			},
 			want: &Option{
 				Name:   "--str-type-opt",
 				Type:   STRING,
 				IsFlag: false,
 			},
+			wantErr:    false,
+			wantErrStr: "",
 		},
 		{
 			testName: "Test-Ok-BoolTypeOpt",
-			args: args{
+			input: inputType{
 				optName: "--bool-type-opt",
 				optType: BOOL,
-				wantErr: false,
 			},
 			want: &Option{
 				Name:   "--bool-type-opt",
 				Type:   BOOL,
 				IsFlag: false,
 			},
+			wantErr:    false,
+			wantErrStr: "",
 		},
 		{
-			testName: "Test-Fail-InvalidOptName-ZeroLength",
-			args: args{
-				optName:    "",
-				optType:    BOOL,
-				wantErr:    true,
-				wantErrStr: "name must not be empty",
+			testName: "Test-Fail-InvalidOptName-Empty",
+			input: inputType{
+				optName: "",
+				optType: STRING,
 			},
-			want: nil,
+			want:       nil,
+			wantErr:    true,
+			wantErrStr: "name must not be empty",
 		},
 		{
-			testName: "Test-Fail-InvalidOptName-NotStartWithDoubleDash",
-			args: args{
-				optName:    "invalid-opt-name",
-				optType:    BOOL,
-				wantErr:    true,
-				wantErrStr: "name must start with '--'",
+			testName: "Test-Fail-InvalidOptName-NotStartsWithDoubleDash",
+			input: inputType{
+				optName: "invalid-opt-name",
+				optType: INT,
 			},
-			want: nil,
+			want:       nil,
+			wantErr:    true,
+			wantErrStr: "name must start with '--'",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.testName, func(t *testing.T) {
-			got, err := NewOption(tt.args.optName, tt.args.optType)
-			if (err != nil) != tt.args.wantErr {
-				t.Fatalf("NewOption() error = %v, wantError %v", err, tt.args.wantErr)
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			got, err := NewOption(tc.input.optName, tc.input.optType)
+			isErr := err != nil
+			if isErr != tc.wantErr {
+				t.Fatalf("NewOption() error = %v, wantError %v", err, tc.wantErr)
 			}
-			if tt.args.wantErr {
-				if err.Error() != tt.args.wantErrStr {
-					t.Errorf("NewOption() error = %v, wantErrStr %v", err, tt.args.wantErrStr)
+			if tc.wantErr {
+				if err.Error() != tc.wantErrStr {
+					t.Errorf("NewOption() error = %v, wantErrStr %v", err, tc.wantErrStr)
 				}
-			} else if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewOption() = %v, want %v", got, tt.want)
+			} else if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("NewOption() = %v, want %v", got, tc.want)
 			}
 		})
 	}
 }
 
 func TestNewFlagOption(t *testing.T) {
-	type args struct {
-		optName    string
+	type testCase struct {
+		testName   string
+		input      string
+		want       *Option
 		wantErr    bool
 		wantErrStr string
 	}
-	tests := []struct {
-		testName string
-		args     args
-		want     *Option
-	}{
+	tests := []testCase{
 		{
 			testName: "Test-Success-CreateFlagOption",
-			args: args{
-				optName: "--simple-option",
-				wantErr: false,
-			},
+			input:    "--simple-option",
 			want: &Option{
 				Name:   "--simple-option",
 				Type:   BOOL,
@@ -119,32 +118,33 @@ func TestNewFlagOption(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-Fail-InvalidOptName-ZeroLength",
-			args: args{
-				optName:    "",
-				wantErr:    true,
-				wantErrStr: "name must not be empty",
-			},
-			want: nil,
+			testName:   "Test-Fail-InvalidOptName-Empty",
+			input:      "",
+			want:       nil,
+			wantErr:    true,
+			wantErrStr: "name must not be empty",
 		},
 		{
-			testName: "Test-Fail-InvalidOptName-NotStartWithDoubleDash",
-			args: args{
-				optName:    "invalid-opt-name",
-				wantErr:    true,
-				wantErrStr: "name must start with '--'",
-			},
-			want: nil,
+			testName:   "Test-Fail-InvalidOptName-NotStartWithDoubleDash",
+			input:      "invalid-opt-name",
+			want:       nil,
+			wantErr:    true,
+			wantErrStr: "name must start with '--'",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.testName, func(t *testing.T) {
-			if got, err := NewFlagOption(tt.args.optName); (err != nil) != tt.args.wantErr ||
-				!reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewFlagOption() = %v, error = %v, want %v, wantError %v", got, err, tt.want, tt.args.wantErr)
-				if tt.args.wantErr && !strings.Contains(err.Error(), tt.args.wantErrStr) {
-					t.Errorf("NewFlagOption() error = %v, wantErrStr %v", err, tt.args.wantErrStr)
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			got, err := NewFlagOption(tc.input)
+			isErr := err != nil
+			if isErr != tc.wantErr {
+				t.Fatalf("NewFlagOption() error = %v, wantError %v", err, tc.wantErr)
+			}
+			if tc.wantErr {
+				if err.Error() != tc.wantErrStr {
+					t.Errorf("NewFlagOption() error = %q, wantErrStr %q", err, tc.wantErrStr)
 				}
+			} else if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("NewFlagOption() = %v, want %v", got, tc.want)
 			}
 		})
 	}

@@ -7,19 +7,20 @@ import (
 )
 
 func TestNewCommand(t *testing.T) {
-	type args struct {
+	type inputType struct {
 		commandName string
 		arguments   []*Argument
 		options     []*Option
 	}
-	tests := []struct {
+	type testCase struct {
 		testName string
-		args     args
+		input    inputType
 		want     string
-	}{
+	}
+	tests := []testCase{
 		{
-			testName: "With 1 arg and 1 opt",
-			args: args{
+			testName: "Test-Ok-WithOneArgAndOneOpt",
+			input: inputType{
 				commandName: "test-command",
 				arguments:   []*Argument{{Name: "Hello", Type: STRING}},
 				options:     []*Option{{Name: "--hello", Type: STRING}},
@@ -27,8 +28,8 @@ func TestNewCommand(t *testing.T) {
 			want: "Usage: test-command [arguments] [options]",
 		},
 		{
-			testName: "With 2 arg and 2 opt",
-			args: args{
+			testName: "Test-Ok-WithTwoArgAndTwoOpt",
+			input: inputType{
 				commandName: "test-command",
 				arguments: []*Argument{
 					{
@@ -56,8 +57,8 @@ func TestNewCommand(t *testing.T) {
 			want: "Usage: test-command [arguments] [options]",
 		},
 		{
-			testName: "With 1 arg and 0 opt",
-			args: args{
+			testName: "Test-Ok-WithOneArgAndZeroOpt",
+			input: inputType{
 				commandName: "test-command",
 				arguments: []*Argument{
 					{
@@ -70,8 +71,8 @@ func TestNewCommand(t *testing.T) {
 			want: "Usage: test-command [arguments]",
 		},
 		{
-			testName: "With 0 arg and 1 opt",
-			args: args{
+			testName: "Test-Ok-WithZeroArgAndOneOpt",
+			input: inputType{
 				commandName: "test-command",
 				arguments:   []*Argument{},
 				options: []*Option{
@@ -84,26 +85,35 @@ func TestNewCommand(t *testing.T) {
 			},
 			want: "Usage: test-command [options]",
 		},
+		{
+			testName: "Test-Ok-WithZeroArgAndZeroOpt",
+			input: inputType{
+				commandName: "test-command",
+				arguments:   []*Argument{},
+				options:     []*Option{},
+			},
+			want: "Usage: test-command",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			got := NewCommand(tt.args.commandName, tt.args.arguments, tt.args.options, nil)
+			got := NewCommand(tt.input.commandName, tt.input.arguments, tt.input.options, nil)
 
-			if got.Name != tt.args.commandName {
-				t.Errorf("NewCommand().Name = %v, want %v", got.Name, tt.args.commandName)
+			if got.Name != tt.input.commandName {
+				t.Errorf("Command.Name = %v, want %v", got.Name, tt.input.commandName)
 			}
 
-			if !reflect.DeepEqual(got.Arguments, tt.args.arguments) {
-				t.Errorf("NewCommand().Arguments = %v, want %v", got.Arguments, tt.args.arguments)
+			if !reflect.DeepEqual(got.Arguments, tt.input.arguments) {
+				t.Errorf("Command.Arguments = %v, want %v", got.Arguments, tt.input.arguments)
 			}
 
-			if !reflect.DeepEqual(got.Options, tt.args.options) {
-				t.Errorf("NewCommand().Options = %v, want %v", got.Options, tt.args.options)
+			if !reflect.DeepEqual(got.Options, tt.input.options) {
+				t.Errorf("Command.Options = %v, want %v", got.Options, tt.input.options)
 			}
 
 			if got.Usage != tt.want {
-				t.Errorf("NewCommand().Usage = %v, want %v", got.Usage, tt.want)
+				t.Errorf("Command.Usage = %v, want %v", got.Usage, tt.want)
 			}
 		})
 	}
@@ -219,7 +229,7 @@ func TestCommand_Execute(t *testing.T) {
 			}
 			if tc.wantErr {
 				if err.Error() != tc.wantErrStr {
-					t.Errorf("NewOption() error = %q, wantErrStr %q", err, tc.wantErrStr)
+					t.Errorf("Command.Execute() error = %q, wantErrStr %q", err, tc.wantErrStr)
 				}
 			} else if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("Command.Execute() = %v, want %v", got, tc.want)
