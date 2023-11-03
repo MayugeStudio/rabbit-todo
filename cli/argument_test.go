@@ -2,6 +2,7 @@ package cli
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -11,9 +12,11 @@ func TestNewArgument(t *testing.T) {
 		argType ParameterType
 	}
 	tests := []struct {
-		testName string
-		args     args
-		want     *Argument
+		testName   string
+		args       args
+		want       *Argument
+		wantErr    bool
+		wantErrStr string
 	}{
 		{
 			testName: "Test-Ok-IntTypeArg",
@@ -25,6 +28,7 @@ func TestNewArgument(t *testing.T) {
 				Name: "intTypeArg",
 				Type: INT,
 			},
+			wantErr: false,
 		},
 		{
 			testName: "Test-Ok-StrTypeArg",
@@ -36,6 +40,7 @@ func TestNewArgument(t *testing.T) {
 				Name: "strTypeArg",
 				Type: STRING,
 			},
+			wantErr: false,
 		},
 		{
 			testName: "Test-Ok-BoolTypeArg",
@@ -47,6 +52,7 @@ func TestNewArgument(t *testing.T) {
 				Name: "boolTypeArg",
 				Type: BOOL,
 			},
+			wantErr: false,
 		},
 		{
 			testName: "Test-Fail-InvalidArgName-ZeroLength",
@@ -54,7 +60,8 @@ func TestNewArgument(t *testing.T) {
 				argName: "",
 				argType: BOOL,
 			},
-			want: nil,
+			wantErr:    true,
+			wantErrStr: "name must not be empty",
 		},
 		{
 			testName: "Test-Fail-InvalidArgName-DoubleDashPrefix",
@@ -62,13 +69,24 @@ func TestNewArgument(t *testing.T) {
 				argName: "--invalid-arg-name",
 				argType: BOOL,
 			},
-			want: nil,
+			wantErr:    true,
+			wantErrStr: "name must not start with '--'",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			if got := NewArgument(tt.args.argName, tt.args.argType); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewArgument() = %v, want %v", got, tt.want)
+			got, err := NewArgument(tt.args.argName, tt.args.argType)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("NewArgument() = %v, %q, want nil, %q", got, err, tt.wantErrStr)
+				}
+				if !strings.Contains(err.Error(), tt.wantErrStr) {
+					t.Errorf("NewArgument() = %v, %q, want nil, %q", got, err, tt.wantErrStr)
+				}
+			} else {
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("NewArgument() = %v, nil, want %v, nil", got, tt.want)
+				}
 			}
 		})
 	}

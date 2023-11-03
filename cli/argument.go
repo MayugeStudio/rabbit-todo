@@ -1,21 +1,25 @@
 package cli
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Argument struct {
 	Name string
 	Type ParameterType
 }
 
-func NewArgument(name string, tp ParameterType) *Argument {
+func NewArgument(name string, tp ParameterType) (*Argument, error) {
 	if len(name) == 0 {
-		return nil
+		return nil, fmt.Errorf("name must not be empty")
 	}
+
 	if strings.HasPrefix(name, "--") {
-		return nil
+		return nil, fmt.Errorf("name must not start with '--'")
 	}
 	return &Argument{
 		Name: name,
 		Type: tp,
-	}
+	}, nil
 }
