@@ -41,8 +41,16 @@ func TestNewCommand(t *testing.T) {
 					},
 				},
 				options: []*Option{
-					NewOption("--hello", STRING),
-					NewOption("--world", STRING),
+					{
+						Name:   "--hello",
+						Type:   STRING,
+						IsFlag: false,
+					},
+					{
+						Name:   "--world",
+						Type:   STRING,
+						IsFlag: false,
+					},
 				},
 			},
 			want: "Usage: test-command [arguments] [options]",
@@ -67,7 +75,11 @@ func TestNewCommand(t *testing.T) {
 				commandName: "test-command",
 				arguments:   []*Argument{},
 				options: []*Option{
-					NewOption("--one-arg", STRING),
+					{
+						Name:   "--one-arg",
+						Type:   STRING,
+						IsFlag: false,
+					},
 				},
 			},
 			want: "Usage: test-command [options]",
@@ -200,7 +212,11 @@ func TestCommand_Execute(t *testing.T) {
 						},
 					},
 					options: []*Option{
-						NewOption("--option-1", STRING),
+						{
+							Name:   "--option-1",
+							Type:   STRING,
+							IsFlag: false,
+						},
 					},
 				},
 				input: Input{

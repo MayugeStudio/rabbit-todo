@@ -1,6 +1,9 @@
 package cli
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Option struct {
 	Name   string
@@ -8,34 +11,36 @@ type Option struct {
 	IsFlag bool
 }
 
-func NewOption(name string, tp ParameterType) *Option {
-	if !isValidOption(name) {
-		return nil
+func NewOption(name string, tp ParameterType) (*Option, error) {
+	err := isValidOption(name)
+	if err != nil {
+		return nil, err
 	}
 	return &Option{
 		Name:   name,
 		Type:   tp,
 		IsFlag: false,
-	}
+	}, nil
 }
 
-func NewFlagOption(name string) *Option {
-	if !isValidOption(name) {
-		return nil
+func NewFlagOption(name string) (*Option, error) {
+	err := isValidOption(name)
+	if err != nil {
+		return nil, err
 	}
 	return &Option{
 		Name:   name,
 		Type:   BOOL,
 		IsFlag: true,
-	}
+	}, nil
 }
 
-func isValidOption(name string) bool {
+func isValidOption(name string) error {
 	if len(name) == 0 {
-		return false
+		return fmt.Errorf("name must not be empty")
 	}
 	if !strings.HasPrefix(name, "--") {
-		return false
+		return fmt.Errorf("name must start with '--'")
 	}
-	return true
+	return nil
 }
