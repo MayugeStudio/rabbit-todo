@@ -16,7 +16,7 @@ func TestNewArgument(t *testing.T) {
 		want     *Argument
 	}{
 		{
-			testName: "Test-IntTypeArg",
+			testName: "Test-Ok-IntTypeArg",
 			args: args{
 				argName: "intTypeArg",
 				argType: INT,
@@ -27,7 +27,7 @@ func TestNewArgument(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-StrTypeArg",
+			testName: "Test-Ok-StrTypeArg",
 			args: args{
 				argName: "strTypeArg",
 				argType: STRING,
@@ -38,7 +38,7 @@ func TestNewArgument(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-BoolTypeArg",
+			testName: "Test-Ok-BoolTypeArg",
 			args: args{
 				argName: "boolTypeArg",
 				argType: BOOL,
