@@ -16,7 +16,7 @@ func TestNewOption(t *testing.T) {
 		want     *Option
 	}{
 		{
-			testName: "Test-IntTypeOpt",
+			testName: "Test-Ok-IntTypeOpt",
 			args: args{
 				optName: "--int-type-opt",
 				optType: INT,
@@ -28,7 +28,7 @@ func TestNewOption(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-StrTypeOpt",
+			testName: "Test-Ok-StrTypeOpt",
 			args: args{
 				optName: "--str-type-opt",
 				optType: STRING,
@@ -40,7 +40,7 @@ func TestNewOption(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-BoolTypeOpt",
+			testName: "Test-Ok-BoolTypeOpt",
 			args: args{
 				optName: "--bool-type-opt",
 				optType: BOOL,
@@ -52,7 +52,7 @@ func TestNewOption(t *testing.T) {
 			},
 		},
 		{
-			testName: "Test-Fail-Invalid-OptName-ZeroLength",
+			testName: "Test-Fail-InvalidOptName-ZeroLength",
 			args: args{
 				optName: "",
 				optType: BOOL,
@@ -60,7 +60,7 @@ func TestNewOption(t *testing.T) {
 			want: nil,
 		},
 		{
-			testName: "Test-Fail-Invalid-OptName-NotStartWithDoubleDash",
+			testName: "Test-Fail-InvalidOptName-NotStartWithDoubleDash",
 			args: args{
 				optName: "invalid-opt-name",
 				optType: BOOL,
