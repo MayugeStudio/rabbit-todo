@@ -163,7 +163,7 @@ func Test_convertToOptionValue(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Err-ConvertIntegerFail",
+			testName: "Error-ConvertIntegerFail",
 			input: inputType{
 				value:     "notInteger",
 				paramType: INT,
@@ -173,7 +173,7 @@ func Test_convertToOptionValue(t *testing.T) {
 			wantErrStr: "cannot convert notInteger to Integer",
 		},
 		{
-			testName: "Err-ConvertBooleanFail",
+			testName: "Error-ConvertBooleanFail",
 			input: inputType{
 				value:     "notBoolean",
 				paramType: BOOL,
@@ -183,7 +183,7 @@ func Test_convertToOptionValue(t *testing.T) {
 			wantErrStr: "cannot convert notBoolean to Boolean",
 		},
 		{
-			testName: "Err-UnknownParameter",
+			testName: "Error-UnknownParameter",
 			input: inputType{
 				value:     "unknown",
 				paramType: -1,

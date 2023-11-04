@@ -19,7 +19,7 @@ func TestNewArgument(t *testing.T) {
 	}
 	tests := []testCase{
 		{
-			testName: "Test-Ok-IntTypeArg",
+			testName: "Ok-IntTypeArg",
 			input: inputType{
 				argName: "intTypeArg",
 				argType: INT,
@@ -32,7 +32,7 @@ func TestNewArgument(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Ok-StrTypeArg",
+			testName: "Ok-StrTypeArg",
 			input: inputType{
 				argName: "strTypeArg",
 				argType: STRING,
@@ -45,7 +45,7 @@ func TestNewArgument(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Ok-BoolTypeArg",
+			testName: "Ok-BoolTypeArg",
 			input: inputType{
 				argName: "boolTypeArg",
 				argType: BOOL,
@@ -58,7 +58,7 @@ func TestNewArgument(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Fail-InvalidArgName-Empty",
+			testName: "Error-InvalidArgName-Empty",
 			input: inputType{
 				argName: "",
 				argType: BOOL,
@@ -68,7 +68,7 @@ func TestNewArgument(t *testing.T) {
 			wantErrStr: "name must not be empty",
 		},
 		{
-			testName: "Test-Fail-InvalidArgName-StartWithDoubleDash",
+			testName: "Error-InvalidArgName-StartWithDoubleDash",
 			input: inputType{
 				argName: "--invalid-arg-name",
 				argType: BOOL,

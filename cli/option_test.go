@@ -19,7 +19,7 @@ func TestNewOption(t *testing.T) {
 	}
 	tests := []testCase{
 		{
-			testName: "Test-Ok-IntTypeOpt",
+			testName: "Ok-IntTypeOpt",
 			input: inputType{
 				optName: "--int-type-opt",
 				optType: INT,
@@ -33,7 +33,7 @@ func TestNewOption(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Ok-StrTypeOpt",
+			testName: "Ok-StrTypeOpt",
 			input: inputType{
 				optName: "--str-type-opt",
 				optType: STRING,
@@ -47,7 +47,7 @@ func TestNewOption(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Ok-BoolTypeOpt",
+			testName: "Ok-BoolTypeOpt",
 			input: inputType{
 				optName: "--bool-type-opt",
 				optType: BOOL,
@@ -61,7 +61,7 @@ func TestNewOption(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Fail-InvalidOptName-Empty",
+			testName: "Error-InvalidOptName-Empty",
 			input: inputType{
 				optName: "",
 				optType: STRING,
@@ -71,7 +71,7 @@ func TestNewOption(t *testing.T) {
 			wantErrStr: "name must not be empty",
 		},
 		{
-			testName: "Test-Fail-InvalidOptName-NotStartsWithDoubleDash",
+			testName: "Error-InvalidOptName-NotStartsWithDoubleDash",
 			input: inputType{
 				optName: "invalid-opt-name",
 				optType: INT,
@@ -109,7 +109,7 @@ func TestNewFlagOption(t *testing.T) {
 	}
 	tests := []testCase{
 		{
-			testName: "Test-Success-CreateFlagOption",
+			testName: "Ok-CreateFlagOption",
 			input:    "--simple-option",
 			want: &Option{
 				Name:   "--simple-option",
@@ -118,14 +118,14 @@ func TestNewFlagOption(t *testing.T) {
 			},
 		},
 		{
-			testName:   "Test-Fail-InvalidOptName-Empty",
+			testName:   "Error-InvalidOptName-Empty",
 			input:      "",
 			want:       nil,
 			wantErr:    true,
 			wantErrStr: "name must not be empty",
 		},
 		{
-			testName:   "Test-Fail-InvalidOptName-NotStartWithDoubleDash",
+			testName:   "Error-InvalidOptName-NotStartWithDoubleDash",
 			input:      "invalid-opt-name",
 			want:       nil,
 			wantErr:    true,

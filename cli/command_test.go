@@ -20,7 +20,7 @@ func TestNewCommand(t *testing.T) {
 	}
 	tests := []testCase{
 		{
-			testName: "Test-Ok-WithOneArgAndOneOpt",
+			testName: "Ok-WithOneArgAndOneOpt",
 			input: inputType{
 				commandName: "test-command",
 				arguments:   []*Argument{{Name: "Hello", Type: STRING}},
@@ -29,7 +29,7 @@ func TestNewCommand(t *testing.T) {
 			want: "Usage: test-command [arguments] [options]",
 		},
 		{
-			testName: "Test-Ok-WithTwoArgAndTwoOpt",
+			testName: "Ok-WithTwoArgAndTwoOpt",
 			input: inputType{
 				commandName: "test-command",
 				arguments: []*Argument{
@@ -58,7 +58,7 @@ func TestNewCommand(t *testing.T) {
 			want: "Usage: test-command [arguments] [options]",
 		},
 		{
-			testName: "Test-Ok-WithOneArgAndZeroOpt",
+			testName: "Ok-WithOneArgAndZeroOpt",
 			input: inputType{
 				commandName: "test-command",
 				arguments: []*Argument{
@@ -72,7 +72,7 @@ func TestNewCommand(t *testing.T) {
 			want: "Usage: test-command [arguments]",
 		},
 		{
-			testName: "Test-Ok-WithZeroArgAndOneOpt",
+			testName: "Ok-WithZeroArgAndOneOpt",
 			input: inputType{
 				commandName: "test-command",
 				arguments:   []*Argument{},
@@ -87,7 +87,7 @@ func TestNewCommand(t *testing.T) {
 			want: "Usage: test-command [options]",
 		},
 		{
-			testName: "Test-Ok-WithZeroArgAndZeroOpt",
+			testName: "Ok-WithZeroArgAndZeroOpt",
 			input: inputType{
 				commandName: "test-command",
 				arguments:   []*Argument{},
@@ -138,7 +138,7 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 
 	tests := []testCase{
 		{
-			testName: "Test-Ok-HelloWorld",
+			testName: "Ok-HelloWorld",
 			input: inputType{
 				command: Command{
 					Name: "return-HelloWorld-command",
@@ -163,7 +163,7 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Fail-NotEnoughArguments",
+			testName: "Error-NotEnoughArguments",
 			input: inputType{
 				command: Command{
 					Name: "fail-command",
@@ -188,7 +188,7 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			wantErrStr: "not enough arguments: actual 1, expected 2",
 		},
 		{
-			testName: "Test-Fail-TooManyArguments",
+			testName: "Error-TooManyArguments",
 			input: inputType{
 				command: Command{
 					Name: "fail-command",
@@ -263,7 +263,7 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 
 	tests := []testCase{
 		{
-			testName: "Test-Ok-WithTwoStringOptionCommand",
+			testName: "Ok-WithTwoStringOptionCommand",
 			input: inputType{
 				command: NewCommand(
 					"two-option-command",
@@ -280,7 +280,7 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Ok-WithTwoIntegerOptionCommand",
+			testName: "Ok-WithTwoIntegerOptionCommand",
 			input: inputType{
 				command: NewCommand(
 					"two-option-command",
@@ -297,7 +297,7 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
-			testName: "Test-Err-InvalidOptionType",
+			testName: "Error-InvalidOptionType",
 			input: inputType{
 				command: NewCommand(
 					"two-option-command",
@@ -314,7 +314,7 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			wantErrStr: "invalid option \"--opt1\": unknown parameter type -1",
 		},
 		{
-			testName: "Test-Err-InvalidOption",
+			testName: "Error-InvalidOption",
 			input: inputType{
 				command: Command{
 					Name:      "fail-command",
