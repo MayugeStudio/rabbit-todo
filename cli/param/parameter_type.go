@@ -1,4 +1,4 @@
-package cli
+package param
 
 type ParameterType int
 

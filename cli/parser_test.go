@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"rabbit-todo/cli/param"
 	"reflect"
 	"strings"
 	"testing"
@@ -20,7 +21,7 @@ func TestParser_Execute(t *testing.T) {
 	}
 
 	actionGen := func(name string) Action {
-		return func(args []string, opts map[string]ParameterValue) (string, error) {
+		return func(args []string, opts map[string]parameter.ParamValue) (string, error) {
 			to := opts["to"].StringVal
 			from := opts["from"].StringVal
 			str := "from:"
@@ -38,13 +39,13 @@ func TestParser_Execute(t *testing.T) {
 	testAction1 := actionGen("John")
 	testAction2 := actionGen("Mike")
 
-	toOption, _ := NewOption("--to", STRING)
-	fromOption, _ := NewOption("--from", STRING)
-	msgArg1, _ := NewArgument("msg-1", STRING)
-	msgArg2, _ := NewArgument("msg-2", STRING)
+	toOption, _ := parameter.NewOption("--to", parameter.STRING)
+	fromOption, _ := parameter.NewOption("--from", parameter.STRING)
+	msgArg1, _ := parameter.NewArgument("msg-1", parameter.STRING)
+	msgArg2, _ := parameter.NewArgument("msg-2", parameter.STRING)
 
-	command1 := NewCommand("command-1", []*Argument{msgArg1, msgArg2}, []*Option{toOption, fromOption}, testAction1)
-	command2 := NewCommand("command-2", []*Argument{msgArg1, msgArg2}, []*Option{toOption, fromOption}, testAction2)
+	command1 := NewCommand("command-1", []*parameter.Argument{msgArg1, msgArg2}, []*parameter.Option{toOption, fromOption}, testAction1)
+	command2 := NewCommand("command-2", []*parameter.Argument{msgArg1, msgArg2}, []*parameter.Option{toOption, fromOption}, testAction2)
 
 	commands := []Command{command1, command2}
 

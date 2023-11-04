@@ -2,15 +2,16 @@ package cli
 
 import (
 	"fmt"
+	"rabbit-todo/cli/param"
 	"strings"
 )
 
-type Action func(args []string, opts map[string]ParameterValue) (string, error)
+type Action func(args []string, opts map[string]parameter.ParamValue) (string, error)
 
 type Command struct {
 	Name      string
-	Arguments []*Argument
-	Options   []*Option
+	Arguments []*parameter.Argument
+	Options   []*parameter.Option
 	Action    Action
 	Usage     string
 }
@@ -19,7 +20,7 @@ type Command struct {
 func (c *Command) Execute(inputParams []string) (string, error) {
 	var (
 		args        []string
-		opts        = make(map[string]ParameterValue)
+		opts        = make(map[string]parameter.ParamValue)
 		flagOpts    = c.flagOptions()
 		startOption = false
 	)
@@ -46,16 +47,16 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 
 	// FlagOptions not passed are initialized to false
 	for _, flagOpt := range flagOpts {
-		opts[strings.TrimPrefix(flagOpt.Name, "-")] = *getBoolParameterPtr(false)
+		opts[strings.TrimPrefix(flagOpt.Name, "-")] = *parameter.NewBoolParameterPtr(false)
 	}
 
 	return c.Action(args, opts)
 }
 
-func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, flagOpts []*Option) (string, *ParameterValue, error) {
+func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, flagOpts []*parameter.Option) (string, *parameter.ParamValue, error) {
 	name := param
 	value := ""
-	var oType ParameterType
+	var oType parameter.ParameterType
 	isValid := false
 	isFlag := false
 
@@ -90,7 +91,7 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 			}
 		}
 		name = strings.TrimPrefix(name, "--")
-		return name, getBoolParameterPtr(true), nil
+		return name, parameter.NewBoolParameterPtr(true), nil
 	} else {
 		// Not Flag Option
 
@@ -98,21 +99,21 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 		if *idxPtr+1 < len(inputParams) {
 			// Normal Option always accepts one argument
 			if !isArgument(inputParams[*idxPtr+1]) {
-				typeStr := ParameterTypeToString(oType)
+				typeStr := parameter.ParameterTypeToString(oType)
 				return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", name, typeStr)
 			}
 		}
 
 		// Whether normal option is last parameter or not
 		if *idxPtr+1 == len(inputParams) {
-			typeStr := ParameterTypeToString(oType)
+			typeStr := parameter.ParameterTypeToString(oType)
 			return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", name, typeStr)
 		}
 		// Increase idx by one
 		*idxPtr++
 		value = inputParams[*idxPtr]
 
-		ov, err := convertToParameterValue(value, oType)
+		ov, err := parameter.ToParameterValue(value, oType)
 		if err != nil {
 			return "", nil, fmt.Errorf("invalid option \"%s\": %w", name, err)
 		}
@@ -122,7 +123,7 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 	}
 }
 
-func NewCommand(name string, args []*Argument, opts []*Option, action Action) Command {
+func NewCommand(name string, args []*parameter.Argument, opts []*parameter.Option, action Action) Command {
 	return Command{
 		Name:      name,
 		Arguments: args,
@@ -139,8 +140,8 @@ func isArgument(param string) bool {
 	return true
 }
 
-func (c *Command) flagOptions() []*Option {
-	var flagOpts []*Option
+func (c *Command) flagOptions() []*parameter.Option {
+	var flagOpts []*parameter.Option
 
 	for _, option := range c.Options {
 		if option.IsFlag {
@@ -150,7 +151,7 @@ func (c *Command) flagOptions() []*Option {
 	return flagOpts
 }
 
-func createUsageString(commandName string, args []*Argument, opts []*Option) string {
+func createUsageString(commandName string, args []*parameter.Argument, opts []*parameter.Option) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("Usage: %s", commandName))
 	if len(args) > 0 {

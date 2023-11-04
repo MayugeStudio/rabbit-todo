@@ -1,18 +1,18 @@
-package cli
+package param
 
 import (
 	"fmt"
 	"strconv"
 )
 
-type ParameterValue struct {
+type ParamValue struct {
 	StringVal string
 	IntVal    int
 	BoolVal   bool
 	Type      ParameterType
 }
 
-func (ov *ParameterValue) Value() interface{} {
+func (ov *ParamValue) Value() interface{} {
 	switch ov.Type {
 	case STRING:
 		return ov.StringVal
@@ -25,32 +25,32 @@ func (ov *ParameterValue) Value() interface{} {
 	}
 }
 
-func convertToParameterValue(value string, paramType ParameterType) (*ParameterValue, error) {
+func ToParameterValue(value string, paramType ParameterType) (*ParamValue, error) {
 	switch paramType {
 	case STRING:
-		return getStringParameterPtr(value), nil
+		return NewStringParameterPtr(value), nil
 	case INT:
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
 			return nil, fmt.Errorf("cannot convert %s to Integer", value)
 		}
-		return getIntegerParameterPtr(intValue), nil
+		return NewIntegerParameterPtr(intValue), nil
 	case BOOL:
 		if value == "" {
-			return getBoolParameterPtr(true), nil
+			return NewBoolParameterPtr(true), nil
 		}
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
 			return nil, fmt.Errorf("cannot convert %s to Boolean", value)
 		}
-		return getBoolParameterPtr(boolValue), nil
+		return NewBoolParameterPtr(boolValue), nil
 	default:
 		return nil, fmt.Errorf("unknown parameter type %v", paramType)
 	}
 }
 
-func getStringParameterPtr(value string) *ParameterValue {
-	return &ParameterValue{
+func NewStringParameterPtr(value string) *ParamValue {
+	return &ParamValue{
 		StringVal: value,
 		IntVal:    0,
 		BoolVal:   false,
@@ -58,8 +58,8 @@ func getStringParameterPtr(value string) *ParameterValue {
 	}
 }
 
-func getIntegerParameterPtr(value int) *ParameterValue {
-	return &ParameterValue{
+func NewIntegerParameterPtr(value int) *ParamValue {
+	return &ParamValue{
 		StringVal: "",
 		IntVal:    value,
 		BoolVal:   false,
@@ -67,8 +67,8 @@ func getIntegerParameterPtr(value int) *ParameterValue {
 	}
 }
 
-func getBoolParameterPtr(value bool) *ParameterValue {
-	return &ParameterValue{
+func NewBoolParameterPtr(value bool) *ParamValue {
+	return &ParamValue{
 		StringVal: "",
 		IntVal:    0,
 		BoolVal:   value,
