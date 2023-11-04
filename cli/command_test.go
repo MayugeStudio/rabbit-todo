@@ -185,38 +185,28 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			},
 			want:       "",
 			wantErr:    true,
-			wantErrStr: "not enough arguments",
+			wantErrStr: "not enough arguments: actual 1, expected 2",
 		},
 		{
-			testName: "Test-Fail-InvalidOption",
+			testName: "Test-Fail-TooManyArguments",
 			input: inputType{
 				command: Command{
-					Name:      "fail-command",
-					Arguments: []*Argument{},
-					Options: []*Option{
+					Name: "fail-command",
+					Arguments: []*Argument{
 						{
-							Name:   "--opt-1",
-							Type:   INT,
-							IsFlag: false,
-						},
-						{
-							Name:   "--opt-2",
-							Type:   INT,
-							IsFlag: false,
+							Name: "arg1",
+							Type: INT,
 						},
 					},
-					Action: testAction,
-					Usage:  "",
+					Options: []*Option{},
+					Action:  testAction,
+					Usage:   "",
 				},
-				inputParams: []string{
-					"--opt-1", "1",
-					"--opt-2", "2",
-					"--opt-3", "3",
-				},
+				inputParams: []string{"arg1", "arg2", "arg3"},
 			},
 			want:       "",
 			wantErr:    true,
-			wantErrStr: "invalid option --opt-3",
+			wantErrStr: "too many arguments: actual 3, expected 1",
 		},
 	}
 
@@ -305,6 +295,42 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			want:       "3",
 			wantErr:    false,
 			wantErrStr: "",
+		},
+		{
+			testName: "Test-Err-InvalidOptionType",
+			input: inputType{
+				command: NewCommand(
+					"two-option-command",
+					[]*Argument{},
+					[]*Option{
+						{Name: "--opt1", Type: -1, IsFlag: false},
+						{Name: "--opt2", Type: INT, IsFlag: false},
+					},
+					testActionAddIntegers),
+				inputParams: []string{"--opt1", "1", "--opt2", "2"},
+			},
+			want:       "3",
+			wantErr:    true,
+			wantErrStr: "invalid option \"--opt1\": unknown parameter type -1",
+		},
+		{
+			testName: "Test-Err-InvalidOption",
+			input: inputType{
+				command: Command{
+					Name:      "fail-command",
+					Arguments: []*Argument{},
+					Options: []*Option{
+						{Name: "--opt-1", Type: INT, IsFlag: false},
+						{Name: "--opt-2", Type: INT, IsFlag: false},
+					},
+					Action: testActionAddIntegers,
+					Usage:  "",
+				},
+				inputParams: []string{"--opt-1", "1", "--opt-2", "2", "--opt-3", "3"},
+			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "invalid option --opt-3",
 		},
 	}
 

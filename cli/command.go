@@ -27,7 +27,7 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 		if isOption(param) {
 			optName := param
 			optValue := ""
-			optType := ParameterType(-1)
+			optType := ParameterType(-100)
 			i++
 
 			for _, eOpt := range c.Options {
@@ -37,7 +37,7 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 				}
 			}
 
-			if optType == -1 {
+			if optType == -100 {
 				return "", fmt.Errorf("invalid option %s", optName)
 			}
 
@@ -45,12 +45,12 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 				optValue = inputParams[i]
 			}
 
-			optName = strings.TrimPrefix(param, "--")
 			ov, err := convertToOptionValue(optValue, optType)
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("invalid option \"%s\": %w", optName, err)
 			}
 
+			optName = strings.TrimPrefix(param, "--")
 			opts[optName] = ov
 
 		} else {
@@ -59,9 +59,9 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 	}
 
 	if len(args) < len(c.Arguments) {
-		return "", fmt.Errorf("not enough arguments")
+		return "", fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.Arguments))
 	} else if len(args) > len(c.Arguments) {
-		return "", fmt.Errorf("too many arguments actual %d, expected %d", len(args), len(c.Arguments))
+		return "", fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.Arguments))
 	}
 
 	return c.Action(args, opts)
