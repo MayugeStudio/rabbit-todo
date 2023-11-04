@@ -481,3 +481,88 @@ func TestCommand_Execute_With_FlagOptions(t *testing.T) {
 		})
 	}
 }
+
+func TestCommand_Execute_Integration(t *testing.T) {
+	type inputType struct {
+		command Command
+		args    []string
+	}
+	type testCase struct {
+		testName   string
+		input      inputType
+		want       string
+		wantErr    bool
+		wantErrStr string
+	}
+
+	testAction1 := func(args []string, opts map[string]OptionValue) (string, error) {
+		to := opts["to"].StringVal
+		from := opts["from"].StringVal
+		str := "from:"
+		str += from
+		str += " -> "
+		str += "\""
+		str += strings.Join(args, " ")
+		str += "\""
+		str += " -> "
+		str += "to:"
+		str += to
+		return str, nil
+	}
+
+	toOption, _ := NewOption("--to", STRING)
+	fromOption, _ := NewOption("--from", STRING)
+	msgArg1, _ := NewArgument("msg-1", STRING)
+	msgArg2, _ := NewArgument("msg-2", STRING)
+
+	command1 := NewCommand("command-1", []*Argument{msgArg1, msgArg2}, []*Option{toOption, fromOption}, testAction1)
+
+	tests := []testCase{
+		{
+			testName: "Ok-ExecuteSuccessfully",
+			input: inputType{
+				command: command1,
+				args:    []string{"Hello", "!!", "--to", "John", "--from", "Mike"},
+			},
+			want:       "from:Mike -> \"Hello !!\" -> to:John",
+			wantErr:    false,
+			wantErrStr: "",
+		},
+		{
+			testName: "Error-MissingArguments",
+			input: inputType{
+				command: command1,
+				args:    []string{"Hello", "--to", "John", "--from", "Mike"},
+			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "not enough arguments: actual 1, expected 2",
+		},
+		{
+			testName: "Error-MissingArgumentOfOption",
+			input: inputType{
+				command: command1,
+				args:    []string{"Hello", "!!", "--to", "--from", "Mike"},
+			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "\"--to\" option require one \"string\" type argument",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			got, err := tc.input.command.Execute(tc.input.args)
+			isErr := err != nil
+			if isErr != tc.wantErr {
+				t.Fatalf("Command.Execute() error = %v, wantError %v", err, tc.wantErr)
+			}
+			if tc.wantErr {
+				if err.Error() != tc.wantErrStr {
+					t.Errorf("Command.Execute() error = %q, wantErrStr %q", err, tc.wantErrStr)
+				}
+			} else if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("Command.Execute() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}

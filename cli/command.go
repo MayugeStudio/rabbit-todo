@@ -30,7 +30,7 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 			args = append(args, param)
 		} else {
 			startOption = true
-			optName, ov, err := c.parseOption(param, inputParams, &i, &flagOpts)
+			optName, ov, err := c.parseOption(param, inputParams, &i, flagOpts)
 			if err != nil {
 				return "", err
 			}
@@ -52,59 +52,68 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 	return c.Action(args, opts)
 }
 
-func (c *Command) parseOption(param string, inputParams []string, idx *int, flagOptsPtr *[]*Option) (string, *OptionValue, error) {
-	optName := param
-	optValue := ""
-	optType := ParameterType(-100)
+func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, flagOpts []*Option) (string, *OptionValue, error) {
+	name := param
+	value := ""
+	var oType ParameterType
+	isValid := false
 	isFlag := false
-	flagOpts := *flagOptsPtr
 
 	for _, eOpt := range c.Options {
-		if eOpt.Name == optName {
-			optType = eOpt.Type
+		if eOpt.Name == name {
+			oType = eOpt.Type
 			isFlag = eOpt.IsFlag
+			isValid = true
 			break
 		}
 	}
 
-	if optType == -100 {
-		return "", nil, fmt.Errorf("invalid option %s", optName)
+	if !isValid {
+		return "", nil, fmt.Errorf("invalid option %s", name)
 	}
 
 	if isFlag {
-		// Check Next Parameter
-		if *idx+1 < len(inputParams) {
-			nextParam := inputParams[*idx+1]
+		// Make sure the next parameter is not an argument not starting with `--`
+		if *idxPtr+1 < len(inputParams) {
+			nextParam := inputParams[*idxPtr+1]
 			// Flag Option cannot have value
 			if isArgument(nextParam) {
-				return "", nil, fmt.Errorf("flag-option %s cannot have value", optName)
+				return "", nil, fmt.Errorf("flag-option %s cannot have value", name)
 			}
 		}
 
 		// Delete FlagOption from FlagOption slice
 		for i, fOpt := range flagOpts {
-			if fOpt.Name == optName {
+			if fOpt.Name == name {
 				flagOpts[i] = flagOpts[len(flagOpts)-1]
 				flagOpts = flagOpts[:len(flagOpts)-1]
 			}
 		}
-		optName = strings.TrimPrefix(optName, "--")
-		return optName, getBoolOptionPtr(true), nil
+		name = strings.TrimPrefix(name, "--")
+		return name, getBoolOptionPtr(true), nil
 	} else {
 		// Not Flag Option
-		// Check Next Parameter
-		*idx++
-		if *idx < len(inputParams) {
-			optValue = inputParams[*idx]
-		}
 
-		ov, err := convertToOptionValue(optValue, optType)
+		// Make sure the  next parameter is not an option starting with `--`
+		if *idxPtr+1 < len(inputParams) {
+			nextParam := inputParams[*idxPtr+1]
+			// Normal Option always accepts one argument
+			if !isArgument(nextParam) {
+				typeStr := ParameterTypeToString(oType)
+				return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", name, typeStr)
+			}
+		}
+		// Increase idx by one
+		*idxPtr++
+		value = inputParams[*idxPtr]
+
+		ov, err := convertToOptionValue(value, oType)
 		if err != nil {
-			return "", nil, fmt.Errorf("invalid option \"%s\": %w", optName, err)
+			return "", nil, fmt.Errorf("invalid option \"%s\": %w", name, err)
 		}
 
-		optName = strings.TrimPrefix(param, "--")
-		return optName, ov, nil
+		name = strings.TrimPrefix(param, "--")
+		return name, ov, nil
 	}
 }
 
