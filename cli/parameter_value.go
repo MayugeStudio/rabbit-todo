@@ -5,14 +5,14 @@ import (
 	"strconv"
 )
 
-type OptionValue struct {
+type ParameterValue struct {
 	StringVal string
 	IntVal    int
 	BoolVal   bool
 	Type      ParameterType
 }
 
-func (ov *OptionValue) Value() interface{} {
+func (ov *ParameterValue) Value() interface{} {
 	switch ov.Type {
 	case STRING:
 		return ov.StringVal
@@ -25,32 +25,32 @@ func (ov *OptionValue) Value() interface{} {
 	}
 }
 
-func convertToOptionValue(value string, paramType ParameterType) (*OptionValue, error) {
+func convertToParameterValue(value string, paramType ParameterType) (*ParameterValue, error) {
 	switch paramType {
 	case STRING:
-		return getStringOptionPtr(value), nil
+		return getStringParameterPtr(value), nil
 	case INT:
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
 			return nil, fmt.Errorf("cannot convert %s to Integer", value)
 		}
-		return getIntegerOptionPtr(intValue), nil
+		return getIntegerParameterPtr(intValue), nil
 	case BOOL:
 		if value == "" {
-			return getBoolOptionPtr(true), nil
+			return getBoolParameterPtr(true), nil
 		}
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
 			return nil, fmt.Errorf("cannot convert %s to Boolean", value)
 		}
-		return getBoolOptionPtr(boolValue), nil
+		return getBoolParameterPtr(boolValue), nil
 	default:
 		return nil, fmt.Errorf("unknown parameter type %v", paramType)
 	}
 }
 
-func getStringOptionPtr(value string) *OptionValue {
-	return &OptionValue{
+func getStringParameterPtr(value string) *ParameterValue {
+	return &ParameterValue{
 		StringVal: value,
 		IntVal:    0,
 		BoolVal:   false,
@@ -58,8 +58,8 @@ func getStringOptionPtr(value string) *OptionValue {
 	}
 }
 
-func getIntegerOptionPtr(value int) *OptionValue {
-	return &OptionValue{
+func getIntegerParameterPtr(value int) *ParameterValue {
+	return &ParameterValue{
 		StringVal: "",
 		IntVal:    value,
 		BoolVal:   false,
@@ -67,8 +67,8 @@ func getIntegerOptionPtr(value int) *OptionValue {
 	}
 }
 
-func getBoolOptionPtr(value bool) *OptionValue {
-	return &OptionValue{
+func getBoolParameterPtr(value bool) *ParameterValue {
+	return &ParameterValue{
 		StringVal: "",
 		IntVal:    0,
 		BoolVal:   value,

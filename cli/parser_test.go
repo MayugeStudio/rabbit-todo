@@ -20,7 +20,7 @@ func TestParser_Execute(t *testing.T) {
 	}
 
 	actionGen := func(name string) Action {
-		return func(args []string, opts map[string]OptionValue) (string, error) {
+		return func(args []string, opts map[string]ParameterValue) (string, error) {
 			to := opts["to"].StringVal
 			from := opts["from"].StringVal
 			str := "from:"

@@ -121,7 +121,9 @@ func TestNewCommand(t *testing.T) {
 }
 
 func TestCommand_Execute_With_Arguments(t *testing.T) {
-	testAction := func(args []string, opts map[string]OptionValue) (string, error) { return strings.Join(args, ""), nil }
+	testAction := func(args []string, opts map[string]ParameterValue) (string, error) {
+		return strings.Join(args, ""), nil
+	}
 
 	type inputType struct {
 		command     Command
@@ -229,8 +231,8 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 }
 
 func TestCommand_Execute_With_Options(t *testing.T) {
-	testActionAddStrings := func(args []string, opts map[string]OptionValue) (string, error) {
-		var opt OptionValue
+	testActionAddStrings := func(args []string, opts map[string]ParameterValue) (string, error) {
+		var opt ParameterValue
 		opt = opts["opt1"]
 		arg1 := opt.StringVal
 
@@ -238,8 +240,8 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 		arg2 := opt.StringVal
 		return arg1 + arg2, nil
 	}
-	testActionAddIntegers := func(args []string, opts map[string]OptionValue) (string, error) {
-		var opt OptionValue
+	testActionAddIntegers := func(args []string, opts map[string]ParameterValue) (string, error) {
+		var opt ParameterValue
 		opt = opts["opt1"]
 		arg1 := opt.IntVal
 
@@ -353,7 +355,7 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 }
 
 func TestCommand_Execute_With_FlagOptions(t *testing.T) {
-	testAction := func(args []string, opts map[string]OptionValue) (string, error) {
+	testAction := func(args []string, opts map[string]ParameterValue) (string, error) {
 		var opt1 bool
 		var opt2 string
 
@@ -495,7 +497,7 @@ func TestCommand_Execute_Integration(t *testing.T) {
 		wantErrStr string
 	}
 
-	testAction1 := func(args []string, opts map[string]OptionValue) (string, error) {
+	testAction1 := func(args []string, opts map[string]ParameterValue) (string, error) {
 		to := opts["to"].StringVal
 		from := opts["from"].StringVal
 		str := "from:"

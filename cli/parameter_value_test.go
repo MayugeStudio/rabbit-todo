@@ -61,7 +61,7 @@ func TestOptionValue_Value(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			ov := &OptionValue{
+			ov := &ParameterValue{
 				StringVal: tt.fields.StringVal,
 				IntVal:    tt.fields.IntVal,
 				BoolVal:   tt.fields.BoolVal,
@@ -82,7 +82,7 @@ func Test_convertToOptionValue(t *testing.T) {
 	type testCase struct {
 		testName   string
 		input      inputType
-		want       *OptionValue
+		want       *ParameterValue
 		wantErr    bool
 		wantErrStr string
 	}
@@ -93,7 +93,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "String-Value",
 				paramType: STRING,
 			},
-			want: &OptionValue{
+			want: &ParameterValue{
 				StringVal: "String-Value",
 				IntVal:    0,
 				BoolVal:   false,
@@ -108,7 +108,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "10",
 				paramType: INT,
 			},
-			want: &OptionValue{
+			want: &ParameterValue{
 				StringVal: "",
 				IntVal:    10,
 				BoolVal:   false,
@@ -123,7 +123,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "",
 				paramType: BOOL,
 			},
-			want: &OptionValue{
+			want: &ParameterValue{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   true,
@@ -138,7 +138,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "true",
 				paramType: BOOL,
 			},
-			want: &OptionValue{
+			want: &ParameterValue{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   true,
@@ -153,7 +153,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "false",
 				paramType: BOOL,
 			},
-			want: &OptionValue{
+			want: &ParameterValue{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   false,
@@ -195,18 +195,18 @@ func Test_convertToOptionValue(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.testName, func(t *testing.T) {
-			got, err := convertToOptionValue(tc.input.value, tc.input.paramType)
+			got, err := convertToParameterValue(tc.input.value, tc.input.paramType)
 			if (err != nil) != tc.wantErr {
-				t.Errorf("convertToOptionValue() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("convertToParameterValue() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
 			if tc.wantErr {
 				if err.Error() != tc.wantErrStr {
-					t.Errorf("convertToOptionValue() error = %q, wantErrStr %q", err, tc.wantErrStr)
+					t.Errorf("convertToParameterValue() error = %q, wantErrStr %q", err, tc.wantErrStr)
 				}
 			}
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("convertToOptionValue() got = %v, want %v", got, tc.want)
+				t.Errorf("convertToParameterValue() got = %v, want %v", got, tc.want)
 			}
 		},
 		)

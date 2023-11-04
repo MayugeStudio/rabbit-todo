@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type Action func(args []string, opts map[string]OptionValue) (string, error)
+type Action func(args []string, opts map[string]ParameterValue) (string, error)
 
 type Command struct {
 	Name      string
@@ -19,7 +19,7 @@ type Command struct {
 func (c *Command) Execute(inputParams []string) (string, error) {
 	var (
 		args        []string
-		opts        = make(map[string]OptionValue)
+		opts        = make(map[string]ParameterValue)
 		flagOpts    = c.flagOptions()
 		startOption = false
 	)
@@ -46,13 +46,13 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 
 	// FlagOptions not passed are initialized to false
 	for _, flagOpt := range flagOpts {
-		opts[strings.TrimPrefix(flagOpt.Name, "-")] = *getBoolOptionPtr(false)
+		opts[strings.TrimPrefix(flagOpt.Name, "-")] = *getBoolParameterPtr(false)
 	}
 
 	return c.Action(args, opts)
 }
 
-func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, flagOpts []*Option) (string, *OptionValue, error) {
+func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, flagOpts []*Option) (string, *ParameterValue, error) {
 	name := param
 	value := ""
 	var oType ParameterType
@@ -90,7 +90,7 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 			}
 		}
 		name = strings.TrimPrefix(name, "--")
-		return name, getBoolOptionPtr(true), nil
+		return name, getBoolParameterPtr(true), nil
 	} else {
 		// Not Flag Option
 
@@ -112,7 +112,7 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 		*idxPtr++
 		value = inputParams[*idxPtr]
 
-		ov, err := convertToOptionValue(value, oType)
+		ov, err := convertToParameterValue(value, oType)
 		if err != nil {
 			return "", nil, fmt.Errorf("invalid option \"%s\": %w", name, err)
 		}
