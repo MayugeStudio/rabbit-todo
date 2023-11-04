@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+const (
+	optionPrefix = "--"
+)
+
 type Action func(args []string, opts map[string]param.Value) (string, error)
 
 type Command struct {
@@ -27,36 +31,27 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 }
 
 func (c *Command) Validate(inputParams []string) ([]string, map[string]param.Value, error) {
-	var (
-		args        []string
-		opts        = make(map[string]param.Value)
-		flagOpts    = c.flagOptions()
-		startOption = false
-	)
+	args := make([]string, 0, len(c.Arguments))
+	opts := c.initializeOptions()
+	flagOpts := c.flagOptions()
+	optionNow := false
 
 	for i := 0; i < len(inputParams); i++ {
 		p := inputParams[i]
-		if isArgument(p) && !startOption {
+		if !optionNow && isArgument(p) {
 			args = append(args, p)
 		} else {
-			startOption = true
-			optName, ov, err := c.parseOption(p, inputParams, &i, flagOpts)
+			optionNow = true
+			optName, v, err := c.parseOption(p, inputParams, &i, flagOpts)
 			if err != nil {
 				return nil, nil, err
 			}
-			opts[optName] = *ov
+			opts[optName] = *v
 		}
 	}
 
-	if len(args) < len(c.Arguments) {
-		return nil, nil, fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.Arguments))
-	} else if len(args) > len(c.Arguments) {
-		return nil, nil, fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.Arguments))
-	}
-
-	// FlagOptions not passed are initialized to false
-	for _, flagOpt := range flagOpts {
-		opts[strings.TrimPrefix(flagOpt.Name, "-")] = *param.NewBoolParameterPtr(false)
+	if err := c.validateArguments(args); err != nil {
+		return nil, nil, err
 	}
 	return args, opts, nil
 }
@@ -72,6 +67,27 @@ func (c *Command) parseOption(optParam string, inputParams []string, idxPtr *int
 	} else {
 		return c.processRegularOption(optParam, optType, inputParams, idxPtr)
 	}
+}
+
+// validateArguments ensures the correct number of arguments have been provided.
+func (c *Command) validateArguments(args []string) error {
+	if len(args) < len(c.Arguments) {
+		return fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.Arguments))
+	} else if len(args) > len(c.Arguments) {
+		return fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.Arguments))
+	}
+	return nil
+}
+
+// initializeOptions initializes the options map with default values for flags.
+func (c *Command) initializeOptions() map[string]param.Value {
+	options := make(map[string]param.Value)
+	for _, option := range c.Options {
+		if option.IsFlag {
+			options[strings.TrimPrefix(option.Name, optionPrefix)] = *param.NewBoolParameterPtr(false)
+		}
+	}
+	return options
 }
 
 func (c *Command) getOptionTypeAndFlag(optionName string) (param.Type, bool, error) {
@@ -92,7 +108,7 @@ func (c *Command) processFlagOption(optionName string, inputParams []string, idx
 
 	// Delete FlagOption from FlagOption slice
 	c.removeFlagOption(optionName, flagOpts)
-	optionName = strings.TrimPrefix(optionName, "--")
+	optionName = strings.TrimPrefix(optionName, optionPrefix)
 	return optionName, param.NewBoolParameterPtr(true), nil
 }
 
@@ -113,7 +129,7 @@ func (c *Command) processRegularOption(optionName string, optType param.Type, in
 		return "", nil, fmt.Errorf("invalid option \"%s\": %w", optionName, err)
 	}
 
-	optionName = strings.TrimPrefix(optionName, "--")
+	optionName = strings.TrimPrefix(optionName, optionPrefix)
 	return optionName, paramValue, nil
 }
 
