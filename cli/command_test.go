@@ -539,7 +539,7 @@ func TestCommand_Execute_Integration(t *testing.T) {
 			wantErrStr: "not enough arguments: actual 1, expected 2",
 		},
 		{
-			testName: "Error-MissingArgumentOfOption",
+			testName: "Error-MissingArgumentOfOption'--to'",
 			input: inputType{
 				command: command1,
 				args:    []string{"Hello", "!!", "--to", "--from", "Mike"},
@@ -547,6 +547,16 @@ func TestCommand_Execute_Integration(t *testing.T) {
 			want:       "",
 			wantErr:    true,
 			wantErrStr: "\"--to\" option require one \"string\" type argument",
+		},
+		{
+			testName: "Error-MissingArgumentOfOption'--from'",
+			input: inputType{
+				command: command1,
+				args:    []string{"Hello", "!!", "--to", "John", "--from"},
+			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "\"--from\" option require one \"string\" type argument",
 		},
 	}
 	for _, tc := range tests {

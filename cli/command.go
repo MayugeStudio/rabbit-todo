@@ -96,12 +96,17 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 
 		// Make sure the  next parameter is not an option starting with `--`
 		if *idxPtr+1 < len(inputParams) {
-			nextParam := inputParams[*idxPtr+1]
 			// Normal Option always accepts one argument
-			if !isArgument(nextParam) {
+			if !isArgument(inputParams[*idxPtr+1]) {
 				typeStr := ParameterTypeToString(oType)
 				return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", name, typeStr)
 			}
+		}
+
+		// Whether normal option is last parameter or not
+		if *idxPtr+1 == len(inputParams) {
+			typeStr := ParameterTypeToString(oType)
+			return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", name, typeStr)
 		}
 		// Increase idx by one
 		*idxPtr++
