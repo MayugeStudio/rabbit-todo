@@ -5,27 +5,27 @@ import (
 	"strconv"
 )
 
-type ParamValue struct {
+type Value struct {
 	StringVal string
 	IntVal    int
 	BoolVal   bool
-	Type      ParameterType
+	Type      Type
 }
 
-func (ov *ParamValue) Value() interface{} {
-	switch ov.Type {
+func (v *Value) Value() interface{} {
+	switch v.Type {
 	case STRING:
-		return ov.StringVal
+		return v.StringVal
 	case INT:
-		return ov.IntVal
+		return v.IntVal
 	case BOOL:
-		return ov.BoolVal
+		return v.BoolVal
 	default:
 		return nil
 	}
 }
 
-func ToParameterValue(value string, paramType ParameterType) (*ParamValue, error) {
+func ToParameterValue(value string, paramType Type) (*Value, error) {
 	switch paramType {
 	case STRING:
 		return NewStringParameterPtr(value), nil
@@ -49,8 +49,8 @@ func ToParameterValue(value string, paramType ParameterType) (*ParamValue, error
 	}
 }
 
-func NewStringParameterPtr(value string) *ParamValue {
-	return &ParamValue{
+func NewStringParameterPtr(value string) *Value {
+	return &Value{
 		StringVal: value,
 		IntVal:    0,
 		BoolVal:   false,
@@ -58,8 +58,8 @@ func NewStringParameterPtr(value string) *ParamValue {
 	}
 }
 
-func NewIntegerParameterPtr(value int) *ParamValue {
-	return &ParamValue{
+func NewIntegerParameterPtr(value int) *Value {
+	return &Value{
 		StringVal: "",
 		IntVal:    value,
 		BoolVal:   false,
@@ -67,8 +67,8 @@ func NewIntegerParameterPtr(value int) *ParamValue {
 	}
 }
 
-func NewBoolParameterPtr(value bool) *ParamValue {
-	return &ParamValue{
+func NewBoolParameterPtr(value bool) *Value {
+	return &Value{
 		StringVal: "",
 		IntVal:    0,
 		BoolVal:   value,

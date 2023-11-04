@@ -7,11 +7,11 @@ import (
 
 type Option struct {
 	Name   string
-	Type   ParameterType
+	Type   Type
 	IsFlag bool
 }
 
-func NewOption(name string, tp ParameterType) (*Option, error) {
+func NewOption(name string, tp Type) (*Option, error) {
 	err := isValidOption(name)
 	if err != nil {
 		return nil, err

@@ -6,63 +6,71 @@ import (
 	"strings"
 )
 
-type Action func(args []string, opts map[string]parameter.ParamValue) (string, error)
+type Action func(args []string, opts map[string]param.Value) (string, error)
 
 type Command struct {
 	Name      string
-	Arguments []*parameter.Argument
-	Options   []*parameter.Option
+	Arguments []*param.Argument
+	Options   []*param.Option
 	Action    Action
 	Usage     string
 }
 
 // Execute method execute action
 func (c *Command) Execute(inputParams []string) (string, error) {
+	args, opts, err := c.Validate(inputParams)
+	if err != nil {
+		return "", err
+	}
+
+	return c.Action(args, opts)
+}
+
+func (c *Command) Validate(inputParams []string) ([]string, map[string]param.Value, error) {
 	var (
 		args        []string
-		opts        = make(map[string]parameter.ParamValue)
+		opts        = make(map[string]param.Value)
 		flagOpts    = c.flagOptions()
 		startOption = false
 	)
 
 	for i := 0; i < len(inputParams); i++ {
-		param := inputParams[i]
-		if isArgument(param) && !startOption {
-			args = append(args, param)
+		p := inputParams[i]
+		if isArgument(p) && !startOption {
+			args = append(args, p)
 		} else {
 			startOption = true
-			optName, ov, err := c.parseOption(param, inputParams, &i, flagOpts)
+			optName, ov, err := c.parseOption(p, inputParams, &i, flagOpts)
 			if err != nil {
-				return "", err
+				return nil, nil, err
 			}
 			opts[optName] = *ov
 		}
 	}
 
 	if len(args) < len(c.Arguments) {
-		return "", fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.Arguments))
+		return nil, nil, fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.Arguments))
 	} else if len(args) > len(c.Arguments) {
-		return "", fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.Arguments))
+		return nil, nil, fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.Arguments))
 	}
 
 	// FlagOptions not passed are initialized to false
 	for _, flagOpt := range flagOpts {
-		opts[strings.TrimPrefix(flagOpt.Name, "-")] = *parameter.NewBoolParameterPtr(false)
+		opts[strings.TrimPrefix(flagOpt.Name, "-")] = *param.NewBoolParameterPtr(false)
 	}
-
-	return c.Action(args, opts)
+	return args, opts, nil
 }
 
-func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, flagOpts []*parameter.Option) (string, *parameter.ParamValue, error) {
-	name := param
+func (c *Command) parseOption(p string, inputParams []string, idxPtr *int, flagOpts []*param.Option) (string, *param.Value, error) {
+	name := p
 	value := ""
-	var oType parameter.ParameterType
+	var optType param.Type
 	isValid := false
 	isFlag := false
 
 	for _, eOpt := range c.Options {
 		if eOpt.Name == name {
-			oType = eOpt.Type
+			optType = eOpt.Type
 			isFlag = eOpt.IsFlag
 			isValid = true
 			break
@@ -91,7 +99,7 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 			}
 		}
 		name = strings.TrimPrefix(name, "--")
-		return name, parameter.NewBoolParameterPtr(true), nil
+		return name, param.NewBoolParameterPtr(true), nil
 	} else {
 		// Not Flag Option
 
@@ -99,31 +107,31 @@ func (c *Command) parseOption(param string, inputParams []string, idxPtr *int, f
 		if *idxPtr+1 < len(inputParams) {
 			// Normal Option always accepts one argument
 			if !isArgument(inputParams[*idxPtr+1]) {
-				typeStr := parameter.ParameterTypeToString(oType)
+				typeStr := param.ParameterTypeToString(optType)
 				return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", name, typeStr)
 			}
 		}
 
 		// Whether normal option is last parameter or not
 		if *idxPtr+1 == len(inputParams) {
-			typeStr := parameter.ParameterTypeToString(oType)
+			typeStr := param.ParameterTypeToString(optType)
 			return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", name, typeStr)
 		}
 		// Increase idx by one
 		*idxPtr++
 		value = inputParams[*idxPtr]
 
-		ov, err := parameter.ToParameterValue(value, oType)
+		ov, err := param.ToParameterValue(value, optType)
 		if err != nil {
 			return "", nil, fmt.Errorf("invalid option \"%s\": %w", name, err)
 		}
 
-		name = strings.TrimPrefix(param, "--")
+		name = strings.TrimPrefix(p, "--")
 		return name, ov, nil
 	}
 }
 
-func NewCommand(name string, args []*parameter.Argument, opts []*parameter.Option, action Action) Command {
+func NewCommand(name string, args []*param.Argument, opts []*param.Option, action Action) Command {
 	return Command{
 		Name:      name,
 		Arguments: args,
@@ -133,15 +141,15 @@ func NewCommand(name string, args []*parameter.Argument, opts []*parameter.Optio
 	}
 }
 
-func isArgument(param string) bool {
-	if strings.HasPrefix(param, "--") {
+func isArgument(p string) bool {
+	if strings.HasPrefix(p, "--") {
 		return false
 	}
 	return true
 }
 
-func (c *Command) flagOptions() []*parameter.Option {
-	var flagOpts []*parameter.Option
+func (c *Command) flagOptions() []*param.Option {
+	var flagOpts []*param.Option
 
 	for _, option := range c.Options {
 		if option.IsFlag {
@@ -151,7 +159,7 @@ func (c *Command) flagOptions() []*parameter.Option {
 	return flagOpts
 }
 
-func createUsageString(commandName string, args []*parameter.Argument, opts []*parameter.Option) string {
+func createUsageString(commandName string, args []*param.Argument, opts []*param.Option) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("Usage: %s", commandName))
 	if len(args) > 0 {

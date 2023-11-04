@@ -8,7 +8,7 @@ import (
 func TestNewOption(t *testing.T) {
 	type inputType struct {
 		optName string
-		optType ParameterType
+		optType Type
 	}
 	type testCase struct {
 		testName   string

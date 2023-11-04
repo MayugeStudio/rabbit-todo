@@ -10,7 +10,7 @@ func TestOptionValue_Value(t *testing.T) {
 		StringVal string
 		IntVal    int
 		BoolVal   bool
-		Type      ParameterType
+		Type      Type
 	}
 	type testCase struct {
 		testName string
@@ -61,7 +61,7 @@ func TestOptionValue_Value(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			ov := &ParamValue{
+			ov := &Value{
 				StringVal: tt.fields.StringVal,
 				IntVal:    tt.fields.IntVal,
 				BoolVal:   tt.fields.BoolVal,
@@ -77,12 +77,12 @@ func TestOptionValue_Value(t *testing.T) {
 func Test_convertToOptionValue(t *testing.T) {
 	type inputType struct {
 		value     string
-		paramType ParameterType
+		paramType Type
 	}
 	type testCase struct {
 		testName   string
 		input      inputType
-		want       *ParamValue
+		want       *Value
 		wantErr    bool
 		wantErrStr string
 	}
@@ -93,7 +93,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "String-Value",
 				paramType: STRING,
 			},
-			want: &ParamValue{
+			want: &Value{
 				StringVal: "String-Value",
 				IntVal:    0,
 				BoolVal:   false,
@@ -108,7 +108,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "10",
 				paramType: INT,
 			},
-			want: &ParamValue{
+			want: &Value{
 				StringVal: "",
 				IntVal:    10,
 				BoolVal:   false,
@@ -123,7 +123,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "",
 				paramType: BOOL,
 			},
-			want: &ParamValue{
+			want: &Value{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   true,
@@ -138,7 +138,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "true",
 				paramType: BOOL,
 			},
-			want: &ParamValue{
+			want: &Value{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   true,
@@ -153,7 +153,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "false",
 				paramType: BOOL,
 			},
-			want: &ParamValue{
+			want: &Value{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   false,

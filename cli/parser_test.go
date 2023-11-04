@@ -21,7 +21,7 @@ func TestParser_Execute(t *testing.T) {
 	}
 
 	actionGen := func(name string) Action {
-		return func(args []string, opts map[string]parameter.ParamValue) (string, error) {
+		return func(args []string, opts map[string]param.Value) (string, error) {
 			to := opts["to"].StringVal
 			from := opts["from"].StringVal
 			str := "from:"
@@ -39,13 +39,13 @@ func TestParser_Execute(t *testing.T) {
 	testAction1 := actionGen("John")
 	testAction2 := actionGen("Mike")
 
-	toOption, _ := parameter.NewOption("--to", parameter.STRING)
-	fromOption, _ := parameter.NewOption("--from", parameter.STRING)
-	msgArg1, _ := parameter.NewArgument("msg-1", parameter.STRING)
-	msgArg2, _ := parameter.NewArgument("msg-2", parameter.STRING)
+	toOption, _ := param.NewOption("--to", param.STRING)
+	fromOption, _ := param.NewOption("--from", param.STRING)
+	msgArg1, _ := param.NewArgument("msg-1", param.STRING)
+	msgArg2, _ := param.NewArgument("msg-2", param.STRING)
 
-	command1 := NewCommand("command-1", []*parameter.Argument{msgArg1, msgArg2}, []*parameter.Option{toOption, fromOption}, testAction1)
-	command2 := NewCommand("command-2", []*parameter.Argument{msgArg1, msgArg2}, []*parameter.Option{toOption, fromOption}, testAction2)
+	command1 := NewCommand("command-1", []*param.Argument{msgArg1, msgArg2}, []*param.Option{toOption, fromOption}, testAction1)
+	command2 := NewCommand("command-2", []*param.Argument{msgArg1, msgArg2}, []*param.Option{toOption, fromOption}, testAction2)
 
 	commands := []Command{command1, command2}
 

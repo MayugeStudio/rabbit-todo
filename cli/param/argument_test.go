@@ -8,7 +8,7 @@ import (
 func TestNewArgument(t *testing.T) {
 	type inputType struct {
 		argName string
-		argType ParameterType
+		argType Type
 	}
 	type testCase struct {
 		testName   string

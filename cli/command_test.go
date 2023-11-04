@@ -11,8 +11,8 @@ import (
 func TestNewCommand(t *testing.T) {
 	type inputType struct {
 		commandName string
-		arguments   []*parameter.Argument
-		options     []*parameter.Option
+		arguments   []*param.Argument
+		options     []*param.Option
 	}
 	type testCase struct {
 		testName string
@@ -24,8 +24,8 @@ func TestNewCommand(t *testing.T) {
 			testName: "Ok-WithOneArgAndOneOpt",
 			input: inputType{
 				commandName: "test-command",
-				arguments:   []*parameter.Argument{{Name: "Hello", Type: parameter.STRING}},
-				options:     []*parameter.Option{{Name: "--hello", Type: parameter.STRING}},
+				arguments:   []*param.Argument{{Name: "Hello", Type: param.STRING}},
+				options:     []*param.Option{{Name: "--hello", Type: param.STRING}},
 			},
 			want: "Usage: test-command [arguments] [options]",
 		},
@@ -33,25 +33,25 @@ func TestNewCommand(t *testing.T) {
 			testName: "Ok-WithTwoArgAndTwoOpt",
 			input: inputType{
 				commandName: "test-command",
-				arguments: []*parameter.Argument{
+				arguments: []*param.Argument{
 					{
 						Name: "Hello",
-						Type: parameter.STRING,
+						Type: param.STRING,
 					},
 					{
 						Name: "World",
-						Type: parameter.STRING,
+						Type: param.STRING,
 					},
 				},
-				options: []*parameter.Option{
+				options: []*param.Option{
 					{
 						Name:   "--hello",
-						Type:   parameter.STRING,
+						Type:   param.STRING,
 						IsFlag: false,
 					},
 					{
 						Name:   "--world",
-						Type:   parameter.STRING,
+						Type:   param.STRING,
 						IsFlag: false,
 					},
 				},
@@ -62,13 +62,13 @@ func TestNewCommand(t *testing.T) {
 			testName: "Ok-WithOneArgAndZeroOpt",
 			input: inputType{
 				commandName: "test-command",
-				arguments: []*parameter.Argument{
+				arguments: []*param.Argument{
 					{
 						Name: "OneArg",
-						Type: parameter.STRING,
+						Type: param.STRING,
 					},
 				},
-				options: []*parameter.Option{},
+				options: []*param.Option{},
 			},
 			want: "Usage: test-command [arguments]",
 		},
@@ -76,11 +76,11 @@ func TestNewCommand(t *testing.T) {
 			testName: "Ok-WithZeroArgAndOneOpt",
 			input: inputType{
 				commandName: "test-command",
-				arguments:   []*parameter.Argument{},
-				options: []*parameter.Option{
+				arguments:   []*param.Argument{},
+				options: []*param.Option{
 					{
 						Name:   "--one-arg",
-						Type:   parameter.STRING,
+						Type:   param.STRING,
 						IsFlag: false,
 					},
 				},
@@ -91,8 +91,8 @@ func TestNewCommand(t *testing.T) {
 			testName: "Ok-WithZeroArgAndZeroOpt",
 			input: inputType{
 				commandName: "test-command",
-				arguments:   []*parameter.Argument{},
-				options:     []*parameter.Option{},
+				arguments:   []*param.Argument{},
+				options:     []*param.Option{},
 			},
 			want: "Usage: test-command",
 		},
@@ -122,7 +122,7 @@ func TestNewCommand(t *testing.T) {
 }
 
 func TestCommand_Execute_With_Arguments(t *testing.T) {
-	testAction := func(args []string, opts map[string]parameter.ParamValue) (string, error) {
+	testAction := func(args []string, opts map[string]param.Value) (string, error) {
 		return strings.Join(args, ""), nil
 	}
 
@@ -145,17 +145,17 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			input: inputType{
 				command: Command{
 					Name: "return-HelloWorld-command",
-					Arguments: []*parameter.Argument{
+					Arguments: []*param.Argument{
 						{
 							Name: "a",
-							Type: parameter.STRING,
+							Type: param.STRING,
 						},
 						{
 							Name: "b",
-							Type: parameter.STRING,
+							Type: param.STRING,
 						},
 					},
-					Options: []*parameter.Option{},
+					Options: []*param.Option{},
 					Action:  testAction,
 					Usage:   "",
 				},
@@ -170,17 +170,17 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			input: inputType{
 				command: Command{
 					Name: "fail-command",
-					Arguments: []*parameter.Argument{
+					Arguments: []*param.Argument{
 						{
 							Name: "arg1",
-							Type: parameter.INT,
+							Type: param.INT,
 						},
 						{
 							Name: "arg2",
-							Type: parameter.STRING,
+							Type: param.STRING,
 						},
 					},
-					Options: []*parameter.Option{},
+					Options: []*param.Option{},
 					Action:  testAction,
 					Usage:   "",
 				},
@@ -195,13 +195,13 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			input: inputType{
 				command: Command{
 					Name: "fail-command",
-					Arguments: []*parameter.Argument{
+					Arguments: []*param.Argument{
 						{
 							Name: "arg1",
-							Type: parameter.INT,
+							Type: param.INT,
 						},
 					},
-					Options: []*parameter.Option{},
+					Options: []*param.Option{},
 					Action:  testAction,
 					Usage:   "",
 				},
@@ -232,23 +232,15 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 }
 
 func TestCommand_Execute_With_Options(t *testing.T) {
-	testActionAddStrings := func(args []string, opts map[string]parameter.ParamValue) (string, error) {
-		var opt parameter.ParamValue
-		opt = opts["opt1"]
-		arg1 := opt.StringVal
-
-		opt = opts["opt2"]
-		arg2 := opt.StringVal
-		return arg1 + arg2, nil
+	testActionAddStrings := func(args []string, opts map[string]param.Value) (string, error) {
+		opt1 := opts["opt1"].StringVal
+		opt2 := opts["opt2"].StringVal
+		return opt1 + opt2, nil
 	}
-	testActionAddIntegers := func(args []string, opts map[string]parameter.ParamValue) (string, error) {
-		var opt parameter.ParamValue
-		opt = opts["opt1"]
-		arg1 := opt.IntVal
-
-		opt = opts["opt2"]
-		arg2 := opt.IntVal
-		return fmt.Sprintf("%d", arg1+arg2), nil
+	testActionAddIntegers := func(args []string, opts map[string]param.Value) (string, error) {
+		opt1 := opts["opt1"].IntVal
+		opt2 := opts["opt2"].IntVal
+		return fmt.Sprintf("%d", opt1+opt2), nil
 	}
 
 	type inputType struct {
@@ -270,10 +262,10 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			input: inputType{
 				command: NewCommand(
 					"two-option-command",
-					[]*parameter.Argument{},
-					[]*parameter.Option{
-						{Name: "--opt1", Type: parameter.STRING, IsFlag: false},
-						{Name: "--opt2", Type: parameter.STRING, IsFlag: false},
+					[]*param.Argument{},
+					[]*param.Option{
+						{Name: "--opt1", Type: param.STRING, IsFlag: false},
+						{Name: "--opt2", Type: param.STRING, IsFlag: false},
 					},
 					testActionAddStrings),
 				inputParams: []string{"--opt1", "Hello", "--opt2", "World"},
@@ -287,10 +279,10 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			input: inputType{
 				command: NewCommand(
 					"two-option-command",
-					[]*parameter.Argument{},
-					[]*parameter.Option{
-						{Name: "--opt1", Type: parameter.INT, IsFlag: false},
-						{Name: "--opt2", Type: parameter.INT, IsFlag: false},
+					[]*param.Argument{},
+					[]*param.Option{
+						{Name: "--opt1", Type: param.INT, IsFlag: false},
+						{Name: "--opt2", Type: param.INT, IsFlag: false},
 					},
 					testActionAddIntegers),
 				inputParams: []string{"--opt1", "1", "--opt2", "2"},
@@ -304,10 +296,10 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			input: inputType{
 				command: NewCommand(
 					"two-option-command",
-					[]*parameter.Argument{},
-					[]*parameter.Option{
+					[]*param.Argument{},
+					[]*param.Option{
 						{Name: "--opt1", Type: -1, IsFlag: false},
-						{Name: "--opt2", Type: parameter.INT, IsFlag: false},
+						{Name: "--opt2", Type: param.INT, IsFlag: false},
 					},
 					testActionAddIntegers),
 				inputParams: []string{"--opt1", "1", "--opt2", "2"},
@@ -321,10 +313,10 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 			input: inputType{
 				command: Command{
 					Name:      "fail-command",
-					Arguments: []*parameter.Argument{},
-					Options: []*parameter.Option{
-						{Name: "--opt-1", Type: parameter.INT, IsFlag: false},
-						{Name: "--opt-2", Type: parameter.INT, IsFlag: false},
+					Arguments: []*param.Argument{},
+					Options: []*param.Option{
+						{Name: "--opt-1", Type: param.INT, IsFlag: false},
+						{Name: "--opt-2", Type: param.INT, IsFlag: false},
 					},
 					Action: testActionAddIntegers,
 					Usage:  "",
@@ -356,7 +348,7 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 }
 
 func TestCommand_Execute_With_FlagOptions(t *testing.T) {
-	testAction := func(args []string, opts map[string]parameter.ParamValue) (string, error) {
+	testAction := func(args []string, opts map[string]param.Value) (string, error) {
 		var opt1 bool
 		var opt2 string
 
@@ -390,15 +382,15 @@ func TestCommand_Execute_With_FlagOptions(t *testing.T) {
 				command: Command{
 					Name:      "flag-command",
 					Arguments: nil,
-					Options: []*parameter.Option{
+					Options: []*param.Option{
 						{
 							Name:   "--opt1",
-							Type:   parameter.BOOL,
+							Type:   param.BOOL,
 							IsFlag: true,
 						},
 						{
 							Name:   "--opt2",
-							Type:   parameter.STRING,
+							Type:   param.STRING,
 							IsFlag: false,
 						},
 					},
@@ -417,15 +409,15 @@ func TestCommand_Execute_With_FlagOptions(t *testing.T) {
 				command: Command{
 					Name:      "flag-command",
 					Arguments: nil,
-					Options: []*parameter.Option{
+					Options: []*param.Option{
 						{
 							Name:   "--opt1",
-							Type:   parameter.BOOL,
+							Type:   param.BOOL,
 							IsFlag: true,
 						},
 						{
 							Name:   "--opt2",
-							Type:   parameter.STRING,
+							Type:   param.STRING,
 							IsFlag: false,
 						},
 					},
@@ -444,15 +436,15 @@ func TestCommand_Execute_With_FlagOptions(t *testing.T) {
 				command: Command{
 					Name:      "flag-command",
 					Arguments: nil,
-					Options: []*parameter.Option{
+					Options: []*param.Option{
 						{
 							Name:   "--opt1",
-							Type:   parameter.BOOL,
+							Type:   param.BOOL,
 							IsFlag: true,
 						},
 						{
 							Name:   "--opt2",
-							Type:   parameter.STRING,
+							Type:   param.STRING,
 							IsFlag: false,
 						},
 					},
@@ -498,7 +490,7 @@ func TestCommand_Execute_Integration(t *testing.T) {
 		wantErrStr string
 	}
 
-	testAction1 := func(args []string, opts map[string]parameter.ParamValue) (string, error) {
+	testAction1 := func(args []string, opts map[string]param.Value) (string, error) {
 		to := opts["to"].StringVal
 		from := opts["from"].StringVal
 		str := "from:"
@@ -513,12 +505,12 @@ func TestCommand_Execute_Integration(t *testing.T) {
 		return str, nil
 	}
 
-	toOption, _ := parameter.NewOption("--to", parameter.STRING)
-	fromOption, _ := parameter.NewOption("--from", parameter.STRING)
-	msgArg1, _ := parameter.NewArgument("msg-1", parameter.STRING)
-	msgArg2, _ := parameter.NewArgument("msg-2", parameter.STRING)
+	toOption, _ := param.NewOption("--to", param.STRING)
+	fromOption, _ := param.NewOption("--from", param.STRING)
+	msgArg1, _ := param.NewArgument("msg-1", param.STRING)
+	msgArg2, _ := param.NewArgument("msg-2", param.STRING)
 
-	command1 := NewCommand("command-1", []*parameter.Argument{msgArg1, msgArg2}, []*parameter.Option{toOption, fromOption}, testAction1)
+	command1 := NewCommand("command-1", []*param.Argument{msgArg1, msgArg2}, []*param.Option{toOption, fromOption}, testAction1)
 
 	tests := []testCase{
 		{

@@ -7,10 +7,10 @@ import (
 
 type Argument struct {
 	Name string
-	Type ParameterType
+	Type Type
 }
 
-func NewArgument(name string, tp ParameterType) (*Argument, error) {
+func NewArgument(name string, tp Type) (*Argument, error) {
 	if len(name) == 0 {
 		return nil, fmt.Errorf("name must not be empty")
 	}

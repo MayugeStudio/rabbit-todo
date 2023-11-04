@@ -4,7 +4,7 @@ import "testing"
 
 func TestParameterTypeToString(t *testing.T) {
 	type inputType struct {
-		paramType ParameterType
+		paramType Type
 	}
 	type testCase struct {
 		testName string

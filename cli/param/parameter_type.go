@@ -1,14 +1,14 @@
 package param
 
-type ParameterType int
+type Type int
 
 const (
-	STRING ParameterType = iota
+	STRING Type = iota
 	INT
 	BOOL
 )
 
-func ParameterTypeToString(paramType ParameterType) string {
+func ParameterTypeToString(paramType Type) string {
 	switch paramType {
 	case BOOL:
 		return "bool"
