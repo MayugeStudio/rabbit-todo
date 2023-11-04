@@ -25,26 +25,53 @@ func (ov *OptionValue) Value() interface{} {
 	}
 }
 
-func convertToOptionValue(value string, paramType ParameterType) (OptionValue, error) {
+func convertToOptionValue(value string, paramType ParameterType) (*OptionValue, error) {
 	switch paramType {
 	case STRING:
-		return OptionValue{StringVal: value, Type: STRING}, nil
+		return getStringOptionPtr(value), nil
 	case INT:
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
-			return OptionValue{}, fmt.Errorf("cannot convert %s to Integer", value)
+			return nil, fmt.Errorf("cannot convert %s to Integer", value)
 		}
-		return OptionValue{IntVal: intValue, Type: INT}, nil
+		return getIntegerOptionPtr(intValue), nil
 	case BOOL:
 		if value == "" {
-			return OptionValue{BoolVal: true, Type: BOOL}, nil
+			return getBoolOptionPtr(true), nil
 		}
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
-			return OptionValue{}, fmt.Errorf("cannot convert %s to Boolean", value)
+			return nil, fmt.Errorf("cannot convert %s to Boolean", value)
 		}
-		return OptionValue{BoolVal: boolValue, Type: BOOL}, nil
+		return getBoolOptionPtr(boolValue), nil
 	default:
-		return OptionValue{}, fmt.Errorf("unknown parameter type %v", paramType)
+		return nil, fmt.Errorf("unknown parameter type %v", paramType)
+	}
+}
+
+func getStringOptionPtr(value string) *OptionValue {
+	return &OptionValue{
+		StringVal: value,
+		IntVal:    0,
+		BoolVal:   false,
+		Type:      STRING,
+	}
+}
+
+func getIntegerOptionPtr(value int) *OptionValue {
+	return &OptionValue{
+		StringVal: "",
+		IntVal:    value,
+		BoolVal:   false,
+		Type:      INT,
+	}
+}
+
+func getBoolOptionPtr(value bool) *OptionValue {
+	return &OptionValue{
+		StringVal: "",
+		IntVal:    0,
+		BoolVal:   value,
+		Type:      BOOL,
 	}
 }

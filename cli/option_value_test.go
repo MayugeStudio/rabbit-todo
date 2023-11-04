@@ -82,7 +82,7 @@ func Test_convertToOptionValue(t *testing.T) {
 	type testCase struct {
 		testName   string
 		input      inputType
-		want       OptionValue
+		want       *OptionValue
 		wantErr    bool
 		wantErrStr string
 	}
@@ -93,7 +93,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "String-Value",
 				paramType: STRING,
 			},
-			want: OptionValue{
+			want: &OptionValue{
 				StringVal: "String-Value",
 				IntVal:    0,
 				BoolVal:   false,
@@ -108,7 +108,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "10",
 				paramType: INT,
 			},
-			want: OptionValue{
+			want: &OptionValue{
 				StringVal: "",
 				IntVal:    10,
 				BoolVal:   false,
@@ -123,7 +123,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "",
 				paramType: BOOL,
 			},
-			want: OptionValue{
+			want: &OptionValue{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   true,
@@ -138,7 +138,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "true",
 				paramType: BOOL,
 			},
-			want: OptionValue{
+			want: &OptionValue{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   true,
@@ -153,7 +153,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "false",
 				paramType: BOOL,
 			},
-			want: OptionValue{
+			want: &OptionValue{
 				StringVal: "",
 				IntVal:    0,
 				BoolVal:   false,
@@ -168,7 +168,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "notInteger",
 				paramType: INT,
 			},
-			want:       OptionValue{},
+			want:       nil,
 			wantErr:    true,
 			wantErrStr: "cannot convert notInteger to Integer",
 		},
@@ -178,7 +178,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "notBoolean",
 				paramType: BOOL,
 			},
-			want:       OptionValue{},
+			want:       nil,
 			wantErr:    true,
 			wantErrStr: "cannot convert notBoolean to Boolean",
 		},
@@ -188,7 +188,7 @@ func Test_convertToOptionValue(t *testing.T) {
 				value:     "unknown",
 				paramType: -1,
 			},
-			want:       OptionValue{},
+			want:       nil,
 			wantErr:    true,
 			wantErrStr: "unknown parameter type -1",
 		},

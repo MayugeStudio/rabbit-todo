@@ -351,3 +351,133 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 		})
 	}
 }
+
+func TestCommand_Execute_With_FlagOptions(t *testing.T) {
+	testAction := func(args []string, opts map[string]OptionValue) (string, error) {
+		var opt1 bool
+		var opt2 string
+
+		opt1 = opts["opt1"].BoolVal
+		opt2 = opts["opt2"].StringVal
+
+		if opt1 {
+			return opt2 + " Hello!", nil
+		}
+
+		return opt2 + " Bye!", nil
+	}
+
+	type inputType struct {
+		command     Command
+		inputParams []string
+	}
+
+	type testCase struct {
+		testName   string
+		input      inputType
+		want       string
+		wantErr    bool
+		wantErrStr string
+	}
+
+	tests := []testCase{
+		{
+			testName: "Ok-TrueFlag",
+			input: inputType{
+				command: Command{
+					Name:      "flag-command",
+					Arguments: nil,
+					Options: []*Option{
+						{
+							Name:   "--opt1",
+							Type:   BOOL,
+							IsFlag: true,
+						},
+						{
+							Name:   "--opt2",
+							Type:   STRING,
+							IsFlag: false,
+						},
+					},
+					Action: testAction,
+					Usage:  "Usage: flag-command [options]",
+				},
+				inputParams: []string{"--opt1", "--opt2", "John"},
+			},
+			want:       "John Hello!",
+			wantErr:    false,
+			wantErrStr: "",
+		},
+		{
+			testName: "Ok-FalseFlag",
+			input: inputType{
+				command: Command{
+					Name:      "flag-command",
+					Arguments: nil,
+					Options: []*Option{
+						{
+							Name:   "--opt1",
+							Type:   BOOL,
+							IsFlag: true,
+						},
+						{
+							Name:   "--opt2",
+							Type:   STRING,
+							IsFlag: false,
+						},
+					},
+					Action: testAction,
+					Usage:  "Usage: flag-command [options]",
+				},
+				inputParams: []string{"--opt2", "John"},
+			},
+			want:       "John Bye!",
+			wantErr:    false,
+			wantErrStr: "",
+		},
+		{
+			testName: "Error-FlagHasValue",
+			input: inputType{
+				command: Command{
+					Name:      "flag-command",
+					Arguments: nil,
+					Options: []*Option{
+						{
+							Name:   "--opt1",
+							Type:   BOOL,
+							IsFlag: true,
+						},
+						{
+							Name:   "--opt2",
+							Type:   STRING,
+							IsFlag: false,
+						},
+					},
+					Action: testAction,
+					Usage:  "Usage: flag-command [options]",
+				},
+				inputParams: []string{"--opt1", "Mike", "--opt2", "John"},
+			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "flag-option --opt1 cannot have value",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			got, err := tc.input.command.Execute(tc.input.inputParams)
+			isErr := err != nil
+			if isErr != tc.wantErr {
+				t.Fatalf("Command.Execute() error = %v, wantError %v", err, tc.wantErr)
+			}
+			if tc.wantErr {
+				if err.Error() != tc.wantErrStr {
+					t.Errorf("Command.Execute() error = %q, wantErrStr %q", err, tc.wantErrStr)
+				}
+			} else if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("Command.Execute() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
