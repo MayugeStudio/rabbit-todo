@@ -88,7 +88,7 @@ func TestParser_Execute(t *testing.T) {
 			},
 			want:       "",
 			wantErr:    true,
-			wantErrStr: "\"--to\" option require one \"string\" type argument",
+			wantErrStr: "\"--to\" option requires a \"string\" type argument",
 		},
 		{
 			testName: "Error-MissingOptions'--from'",
@@ -98,7 +98,7 @@ func TestParser_Execute(t *testing.T) {
 			},
 			want:       "",
 			wantErr:    true,
-			wantErrStr: "\"--from\" option require one \"string\" type argument",
+			wantErrStr: "\"--from\" option requires a \"string\" type argument",
 		},
 	}
 	for _, tc := range tests {

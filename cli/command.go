@@ -62,7 +62,6 @@ func (c *Command) Validate(inputParams []string) ([]string, map[string]param.Val
 }
 
 func (c *Command) parseOption(optParam string, inputParams []string, idxPtr *int, flagOpts []*param.Option) (string, *param.Value, error) {
-	value := ""
 	optType, isFlag, err := c.getOptionTypeAndFlag(optParam)
 	if err != nil {
 		return "", nil, err
@@ -71,8 +70,17 @@ func (c *Command) parseOption(optParam string, inputParams []string, idxPtr *int
 	if isFlag {
 		return c.processFlagOption(optParam, inputParams, idxPtr, flagOpts)
 	} else {
-		return c.processRegularOption(optParam, inputParams, idxPtr, optType, value)
+		return c.processRegularOption(optParam, optType, inputParams, idxPtr)
 	}
+}
+
+func (c *Command) getOptionTypeAndFlag(optionName string) (param.Type, bool, error) {
+	for _, option := range c.Options {
+		if option.Name == optionName {
+			return option.Type, option.IsFlag, nil
+		}
+	}
+	return -1, false, fmt.Errorf("invalid option %s", optionName)
 }
 
 func (c *Command) processFlagOption(optionName string, inputParams []string, idxPtr *int, flagOpts []*param.Option) (string, *param.Value, error) {
@@ -88,41 +96,25 @@ func (c *Command) processFlagOption(optionName string, inputParams []string, idx
 	return optionName, param.NewBoolParameterPtr(true), nil
 }
 
-func (c *Command) processRegularOption(optParam string, inputParams []string, idxPtr *int, optType param.Type, value string) (string, *param.Value, error) {
+func (c *Command) processRegularOption(optionName string, optType param.Type, inputParams []string, idxPtr *int) (string, *param.Value, error) {
 	// Make sure the  next parameter is not an option starting with `--`
-	if *idxPtr+1 < len(inputParams) {
-		// Normal Option always accepts one argument
-		if !isArgument(inputParams[*idxPtr+1]) {
-			typeStr := param.ParameterTypeToString(optType)
-			return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", optParam, typeStr)
-		}
-	}
-
 	// Whether normal option is last parameter or not
-	if *idxPtr+1 == len(inputParams) {
+	// Normal Option always accepts one argument
+	if *idxPtr+1 >= len(inputParams) || !isArgument(inputParams[*idxPtr+1]) {
 		typeStr := param.ParameterTypeToString(optType)
-		return "", nil, fmt.Errorf("\"%s\" option require one \"%s\" type argument", optParam, typeStr)
+		return "", nil, fmt.Errorf("\"%s\" option requires a \"%s\" type argument", optionName, typeStr)
 	}
-	// Increase idx by one
+
+	// Increase idx by 1
 	*idxPtr++
-	value = inputParams[*idxPtr]
-
-	ov, err := param.ToParameterValue(value, optType)
+	value := inputParams[*idxPtr]
+	paramValue, err := param.ToParameterValue(value, optType)
 	if err != nil {
-		return "", nil, fmt.Errorf("invalid option \"%s\": %w", optParam, err)
+		return "", nil, fmt.Errorf("invalid option \"%s\": %w", optionName, err)
 	}
 
-	optParam = strings.TrimPrefix(optParam, "--")
-	return optParam, ov, nil
-}
-
-func (c *Command) getOptionTypeAndFlag(optionName string) (param.Type, bool, error) {
-	for _, option := range c.Options {
-		if option.Name == optionName {
-			return option.Type, option.IsFlag, nil
-		}
-	}
-	return -1, false, fmt.Errorf("invalid option %s", optionName)
+	optionName = strings.TrimPrefix(optionName, "--")
+	return optionName, paramValue, nil
 }
 
 func (c *Command) removeFlagOption(name string, flagOpts []*param.Option) {
