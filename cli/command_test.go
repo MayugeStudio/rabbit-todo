@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"rabbit-todo/cli/param"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -231,8 +230,10 @@ func TestCommand_AddOption(t *testing.T) {
 }
 
 func TestCommand_Execute_With_Arguments(t *testing.T) {
-	testAction := func(args []string, opts map[string]param.Value) (string, error) {
-		return strings.Join(args, ""), nil
+	testAction := func(args map[string]param.Value, opts map[string]param.Value) (string, error) {
+		arg1 := args["a"].StringVal
+		arg2 := args["b"].StringVal
+		return arg1 + arg2, nil
 	}
 
 	type inputType struct {
@@ -281,7 +282,7 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 					arguments: []*param.Argument{
 						{
 							Name: "arg1",
-							Type: param.INT,
+							Type: param.STRING,
 						},
 						{
 							Name: "arg2",
@@ -305,7 +306,7 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 					arguments: []*param.Argument{
 						{
 							Name: "arg1",
-							Type: param.INT,
+							Type: param.STRING,
 						},
 					},
 					options: []*param.Option{},
@@ -315,15 +316,14 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			},
 			want:       "",
 			wantErr:    true,
-			wantErrStr: "too many arguments: actual 3, expected 1",
+			wantErrStr: "too many arguments: expected 1",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.testName, func(t *testing.T) {
 			got, err := tc.input.command.Execute(tc.input.inputParams)
-			isErr := err != nil
-			if isErr != tc.wantErr {
+			if (err != nil) != tc.wantErr {
 				t.Fatalf("Command.Execute() error = %v, wantError %v", err, tc.wantErr)
 			}
 			if tc.wantErr {
@@ -338,12 +338,12 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 }
 
 func TestCommand_Execute_With_Options(t *testing.T) {
-	testActionAddStrings := func(args []string, opts map[string]param.Value) (string, error) {
+	testActionAddStrings := func(args map[string]param.Value, opts map[string]param.Value) (string, error) {
 		opt1 := opts["opt1"].StringVal
 		opt2 := opts["opt2"].StringVal
 		return opt1 + opt2, nil
 	}
-	testActionAddIntegers := func(args []string, opts map[string]param.Value) (string, error) {
+	testActionAddIntegers := func(args map[string]param.Value, opts map[string]param.Value) (string, error) {
 		opt1 := opts["opt1"].IntVal
 		opt2 := opts["opt2"].IntVal
 		return fmt.Sprintf("%d", opt1+opt2), nil
@@ -464,7 +464,7 @@ func TestCommand_Execute_With_Options(t *testing.T) {
 }
 
 func TestCommand_Execute_With_FlagOptions(t *testing.T) {
-	testAction := func(args []string, opts map[string]param.Value) (string, error) {
+	testAction := func(args map[string]param.Value, opts map[string]param.Value) (string, error) {
 		var opt1 bool
 		var opt2 string
 
@@ -603,14 +603,16 @@ func TestCommand_Execute_Integration(t *testing.T) {
 		wantErrStr string
 	}
 
-	testAction1 := func(args []string, opts map[string]param.Value) (string, error) {
+	testAction1 := func(args map[string]param.Value, opts map[string]param.Value) (string, error) {
+		msg1 := args["msg-1"].StringVal
+		msg2 := args["msg-2"].StringVal
 		to := opts["to"].StringVal
 		from := opts["from"].StringVal
 		str := "from:"
 		str += from
 		str += " -> "
 		str += "\""
-		str += strings.Join(args, " ")
+		str += fmt.Sprintf("%s %s", msg1, msg2)
 		str += "\""
 		str += " -> "
 		str += "to:"

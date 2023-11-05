@@ -1,9 +1,9 @@
 package cli
 
 import (
+	"fmt"
 	"rabbit-todo/cli/param"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -21,14 +21,16 @@ func TestParser_Execute(t *testing.T) {
 	}
 
 	actionGen := func(name string) Action {
-		return func(args []string, opts map[string]param.Value) (string, error) {
+		return func(args map[string]param.Value, opts map[string]param.Value) (string, error) {
+			msg1 := args["msg-1"].StringVal
+			msg2 := args["msg-2"].StringVal
 			to := opts["to"].StringVal
 			from := opts["from"].StringVal
 			str := "from:"
 			str += from
 			str += " -> "
 			str += "\""
-			str += strings.Join(args, " ")
+			str += fmt.Sprintf("%s %s", msg1, msg2)
 			str += "\""
 			str += " -> "
 			str += "to:"

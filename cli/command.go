@@ -25,7 +25,7 @@ type Command struct {
 // It takes a slice of arguments and a map of options, which are parsed from the CLI input.
 // The function returns a string that usually contains the result of the command execution or
 // a message to the user, and an error if the execution fails.
-type Action func(args []string, opts map[string]param.Value) (string, error)
+type Action func(args map[string]param.Value, opts map[string]param.Value) (string, error)
 
 // NewCommand constructs a new Command object with the given name and action,
 // then It Generates the param.Argument and param.Option pointer slice.
@@ -96,8 +96,8 @@ func (c *Command) Execute(inputParams []string) (string, error) {
 // a slice of arguments and a map of option if they are valid.
 // It returns an error if there are too few or too many arguments,
 // or if an invalid option is provided.
-func (c *Command) validate(inputParams []string) ([]string, map[string]param.Value, error) {
-	args := make([]string, 0, len(c.arguments))
+func (c *Command) validate(inputParams []string) (map[string]param.Value, map[string]param.Value, error) {
+	args := make(map[string]param.Value)
 	opts := c.initializeOptions()
 	flagOpts := c.flagOptions()
 	optionNow := false
@@ -105,14 +105,22 @@ func (c *Command) validate(inputParams []string) ([]string, map[string]param.Val
 	for i := 0; i < len(inputParams); i++ {
 		p := inputParams[i]
 		if !optionNow && isArgument(p) {
-			args = append(args, p)
-		} else {
-			optionNow = true
-			optName, v, err := c.parseOption(p, inputParams, &i, flagOpts)
+			if i >= len(c.arguments) {
+				return nil, nil, fmt.Errorf("too many arguments: expected %d", len(c.arguments))
+			}
+			argName := c.arguments[i].Name
+			argValue, err := c.parseArgument(p, i)
 			if err != nil {
 				return nil, nil, err
 			}
-			opts[optName] = *v
+			args[argName] = *argValue
+		} else {
+			optionNow = true
+			optName, optValue, err := c.parseOption(p, inputParams, &i, flagOpts)
+			if err != nil {
+				return nil, nil, err
+			}
+			opts[optName] = *optValue
 		}
 	}
 
@@ -120,6 +128,15 @@ func (c *Command) validate(inputParams []string) ([]string, map[string]param.Val
 		return nil, nil, err
 	}
 	return args, opts, nil
+}
+
+func (c *Command) parseArgument(argParam string, idx int) (*param.Value, error) {
+	argType := c.arguments[idx].Type
+	argValue, err := param.ToParameterValue(argParam, argType)
+	if err != nil {
+		return nil, err
+	}
+	return argValue, nil
 }
 
 // parseOption takes an option parameter and the current index of inputParams,
@@ -141,11 +158,11 @@ func (c *Command) parseOption(optParam string, inputParams []string, idxPtr *int
 
 // validateArguments checks if the correct number of the arguments has been provided for the command.
 // It returns an error if the number of provided arguments is less than required or greater than allowed.
-func (c *Command) validateArguments(args []string) error {
+func (c *Command) validateArguments(args map[string]param.Value) error {
 	if len(args) < len(c.arguments) {
 		return fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.arguments))
 	} else if len(args) > len(c.arguments) {
-		return fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.arguments))
+		return fmt.Errorf("too many arguments: expected %d", len(c.arguments))
 	}
 	return nil
 }
