@@ -11,5 +11,8 @@
 # Goland
 .idea/
 
+# Coverage
+coverage
+
 # My Note Directory
 notes/
