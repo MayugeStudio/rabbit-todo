@@ -69,6 +69,16 @@ func TestParser_Execute(t *testing.T) {
 			wantErrStr: "",
 		},
 		{
+			testName: "Err-NoCommandProvided",
+			input: inputType{
+				commands: commands,
+				args:     []string{},
+			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "no command provided",
+		},
+		{
 			testName: "Error-UnknownCommand",
 			input: inputType{
 				commands: commands,
