@@ -30,3 +30,17 @@ func (p *Parser) Execute(args []string) (string, error) {
 	}
 	return "", fmt.Errorf("unknown command %s", commandName)
 }
+
+// AddCommand adds a new command to the parser.
+// It checks for duplicate command names to avoid conflicts.
+// If a command with the same name already exists, it returns an error.
+// Otherwise, it appends the new command to the parser's list of commands.
+func (p *Parser) AddCommand(command Command) error {
+	for _, c := range p.commands {
+		if c.Name == command.Name {
+			return fmt.Errorf("duplicate command name %s", command.Name)
+		}
+	}
+	p.commands = append(p.commands, command)
+	return nil
+}

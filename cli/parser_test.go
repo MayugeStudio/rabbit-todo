@@ -137,3 +137,56 @@ func TestParser_Execute(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_AddCommand(t *testing.T) {
+	type inputType struct {
+		commands []Command
+		command  Command
+	}
+	type testCase struct {
+		testName   string
+		input      inputType
+		wantErr    bool
+		wantErrStr string
+	}
+
+	tests := []testCase{
+		{
+			testName: "Ok-AddCommandSuccessfully",
+			input: inputType{
+				commands: []Command{
+					{Name: "command-1"},
+				},
+				command: Command{Name: "command-2"},
+			},
+			wantErr:    false,
+			wantErrStr: "",
+		},
+		{
+			testName: "Error-DuplicateCommandName",
+			input: inputType{
+				commands: []Command{
+					{
+						Name: "command-1",
+					},
+				},
+				command: Command{Name: "command-1"},
+			},
+			wantErr:    true,
+			wantErrStr: "duplicate command name command-1",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			p := &Parser{
+				commands: tc.input.commands,
+			}
+			err := p.AddCommand(tc.input.command)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("AddCommand() error = %v, wantErr %v", err, tc.wantErr)
+			} else if err != nil && err.Error() != tc.wantErrStr {
+				t.Errorf("AddCommand() gotErrStr = %v, wantErrStr %v", err, tc.wantErrStr)
+			}
+		})
+	}
+}
