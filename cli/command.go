@@ -161,8 +161,6 @@ func (c *Command) parseOption(optParam string, inputParams []string, idxPtr *int
 func (c *Command) validateArguments(args map[string]param.Value) error {
 	if len(args) < len(c.arguments) {
 		return fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.arguments))
-	} else if len(args) > len(c.arguments) {
-		return fmt.Errorf("too many arguments: expected %d", len(c.arguments))
 	}
 	return nil
 }

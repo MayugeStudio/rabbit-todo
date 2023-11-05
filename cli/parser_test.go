@@ -7,6 +7,13 @@ import (
 	"testing"
 )
 
+func TestNewParser(t *testing.T) {
+	t.Run("NewParser", func(t *testing.T) {
+		NewParser()
+	})
+
+}
+
 func TestParser_Execute(t *testing.T) {
 	type inputType struct {
 		commands []Command
