@@ -44,8 +44,16 @@ func TestParser_Execute(t *testing.T) {
 	msgArg1, _ := param.NewArgument("msg-1", param.STRING)
 	msgArg2, _ := param.NewArgument("msg-2", param.STRING)
 
-	command1 := NewCommand("command-1", []*param.Argument{msgArg1, msgArg2}, []*param.Option{toOption, fromOption}, testAction1)
-	command2 := NewCommand("command-2", []*param.Argument{msgArg1, msgArg2}, []*param.Option{toOption, fromOption}, testAction2)
+	command1 := NewCommand("command-1", testAction1)
+	_ = command1.AddArgument(msgArg1)
+	_ = command1.AddArgument(msgArg2)
+	_ = command1.AddOption(toOption)
+	_ = command1.AddOption(fromOption)
+	command2 := NewCommand("command-2", testAction2)
+	_ = command2.AddArgument(msgArg1)
+	_ = command2.AddArgument(msgArg2)
+	_ = command2.AddOption(toOption)
+	_ = command2.AddOption(fromOption)
 
 	commands := []Command{command1, command2}
 

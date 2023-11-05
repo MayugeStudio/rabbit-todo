@@ -16,10 +16,9 @@ const (
 // methods to execute and validate command input.
 type Command struct {
 	Name      string
-	Arguments []*param.Argument
-	Options   []*param.Option
-	Action    Action
-	Usage     string
+	arguments []*param.Argument
+	options   []*param.Option
+	action    Action
 }
 
 // Action defines the function signature for actions that commands execute.
@@ -28,27 +27,77 @@ type Command struct {
 // a message to the user, and an error if the execution fails.
 type Action func(args []string, opts map[string]param.Value) (string, error)
 
+// NewCommand constructs a new Command object with the given name and action,
+// then It Generates the param.Argument and param.Option pointer slice.
+func NewCommand(name string, action Action) Command {
+	return Command{
+		Name:      name,
+		arguments: make([]*param.Argument, 0),
+		options:   make([]*param.Option, 0),
+		action:    action,
+	}
+}
+
+// Usage generates a usage string for the command that includes its name,
+// a placeholder for arguments, and a placeholder for options if the command has any.
+// The generated string is intended to be shown to users to demonstrate how to use the command.
+func (c *Command) Usage() string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("Usage: %s", c.Name))
+	if len(c.arguments) > 0 {
+		builder.WriteString(" [arguments]")
+	}
+	if len(c.options) > 0 {
+		builder.WriteString(" [options]")
+	}
+	return builder.String()
+}
+
+// AddArgument check whether given arg name is duplicate or not,
+// then add it to param.Argument slice.
+func (c *Command) AddArgument(arg *param.Argument) error {
+	for _, argument := range c.arguments {
+		if arg.Name == argument.Name {
+			return fmt.Errorf("duplicate argument name %s", arg.Name)
+		}
+	}
+	c.arguments = append(c.arguments, arg)
+	return nil
+}
+
+// AddOption check whether given opt name is duplicate or not,
+// then add it to param.Option slice.
+func (c *Command) AddOption(opt *param.Option) error {
+	for _, option := range c.options {
+		if opt.Name == option.Name {
+			return fmt.Errorf("duplicate option name %s", opt.Name)
+		}
+	}
+	c.options = append(c.options, opt)
+	return nil
+}
+
 // Execute runs the command with the provided input parameters.
 // It separates the input parameters into arguments and options,
 // validates them, and then calls the commands' Action function.
 // It returns the result-string of the Action function or an error encountered during validation or execution.
 func (c *Command) Execute(inputParams []string) (string, error) {
-	args, opts, err := c.Validate(inputParams)
+	args, opts, err := c.validate(inputParams)
 	if err != nil {
 		return "", err
 	}
 
-	return c.Action(args, opts)
+	return c.action(args, opts)
 }
 
-// Validate parses and validates the input parameters for the command.
+// validate parses and validates the input parameters for the command.
 // It separates the input parameters into arguments and options,
 // checks them against the command's requirements, and returns
 // a slice of arguments and a map of option if they are valid.
 // It returns an error if there are too few or too many arguments,
 // or if an invalid option is provided.
-func (c *Command) Validate(inputParams []string) ([]string, map[string]param.Value, error) {
-	args := make([]string, 0, len(c.Arguments))
+func (c *Command) validate(inputParams []string) ([]string, map[string]param.Value, error) {
+	args := make([]string, 0, len(c.arguments))
 	opts := c.initializeOptions()
 	flagOpts := c.flagOptions()
 	optionNow := false
@@ -93,10 +142,10 @@ func (c *Command) parseOption(optParam string, inputParams []string, idxPtr *int
 // validateArguments checks if the correct number of the arguments has been provided for the command.
 // It returns an error if the number of provided arguments is less than required or greater than allowed.
 func (c *Command) validateArguments(args []string) error {
-	if len(args) < len(c.Arguments) {
-		return fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.Arguments))
-	} else if len(args) > len(c.Arguments) {
-		return fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.Arguments))
+	if len(args) < len(c.arguments) {
+		return fmt.Errorf("not enough arguments: actual %d, expected %d", len(args), len(c.arguments))
+	} else if len(args) > len(c.arguments) {
+		return fmt.Errorf("too many arguments: actual %d, expected %d", len(args), len(c.arguments))
 	}
 	return nil
 }
@@ -106,7 +155,7 @@ func (c *Command) validateArguments(args []string) error {
 // The map is used to store the values of options parses from the input parameters.
 func (c *Command) initializeOptions() map[string]param.Value {
 	options := make(map[string]param.Value)
-	for _, option := range c.Options {
+	for _, option := range c.options {
 		if option.IsFlag {
 			options[strings.TrimPrefix(option.Name, optionPrefix)] = *param.NewBoolParameterPtr(false)
 		}
@@ -118,7 +167,7 @@ func (c *Command) initializeOptions() map[string]param.Value {
 // It returns the type of the option, a boolean indicating if it's a flag,
 // if the option does not exist in the command's options list.
 func (c *Command) getOptionTypeAndFlag(optionName string) (param.Type, bool, error) {
-	for _, option := range c.Options {
+	for _, option := range c.options {
 		if option.Name == optionName {
 			return option.Type, option.IsFlag, nil
 		}
@@ -137,7 +186,6 @@ func (c *Command) processFlagOption(optionName string, inputParams []string, idx
 		return "", nil, fmt.Errorf("flag-option %s cannot have value", optionName)
 	}
 
-	// Delete FlagOption from FlagOption slice
 	c.removeFlagOption(optionName, flagOpts)
 	optionName = strings.TrimPrefix(optionName, optionPrefix)
 	return optionName, param.NewBoolParameterPtr(true), nil
@@ -155,7 +203,6 @@ func (c *Command) processRegularOption(optionName string, optType param.Type, in
 		return "", nil, fmt.Errorf("\"%s\" option requires a \"%s\" type argument", optionName, typeStr)
 	}
 
-	// Increase idx by 1
 	*idxPtr++
 	value := inputParams[*idxPtr]
 	paramValue, err := param.ToParameterValue(value, optType)
@@ -179,18 +226,6 @@ func (c *Command) removeFlagOption(name string, flagOpts []*param.Option) {
 	}
 }
 
-// NewCommand constructs a new Command object with the given name, arguments, options, and action.
-// It also generates a usage string that explains how to call the command.
-func NewCommand(name string, args []*param.Argument, opts []*param.Option, action Action) Command {
-	return Command{
-		Name:      name,
-		Arguments: args,
-		Options:   opts,
-		Action:    action,
-		Usage:     createUsageString(name, args, opts),
-	}
-}
-
 // isArgument checks if the provided string is an argument, i.e., does not start with '--'.
 // It returns true if the string is an argument, false otherwise.
 func isArgument(p string) bool {
@@ -205,25 +240,10 @@ func isArgument(p string) bool {
 func (c *Command) flagOptions() []*param.Option {
 	var flagOpts []*param.Option
 
-	for _, option := range c.Options {
+	for _, option := range c.options {
 		if option.IsFlag {
 			flagOpts = append(flagOpts, option)
 		}
 	}
 	return flagOpts
-}
-
-// createUsageString generates a usage string for the command that includes its name,
-// a placeholder for arguments, and a placeholder for options if the command has any.
-// The generated string is intended to be shown to users to demonstrate how to use the command.
-func createUsageString(commandName string, args []*param.Argument, opts []*param.Option) string {
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("Usage: %s", commandName))
-	if len(args) > 0 {
-		builder.WriteString(" [arguments]")
-	}
-	if len(opts) > 0 {
-		builder.WriteString(" [options]")
-	}
-	return builder.String()
 }
