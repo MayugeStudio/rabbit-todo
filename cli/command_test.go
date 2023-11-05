@@ -164,7 +164,7 @@ func TestCommand_AddArgument(t *testing.T) {
 					t.Errorf("Command.AddArgument() error = %q, wantErrStr %q", Err, tc.wantErrStr)
 				}
 			} else if !reflect.DeepEqual(cmd.arguments, tc.want) {
-				t.Errorf("Command.Execute() = %v, want %v", cmd.arguments, tc.want)
+				t.Errorf("Command.AddArgument() = %v, want %v", cmd.arguments, tc.want)
 			}
 		})
 	}
@@ -317,6 +317,23 @@ func TestCommand_Execute_With_Arguments(t *testing.T) {
 			want:       "",
 			wantErr:    true,
 			wantErrStr: "too many arguments: expected 1",
+		},
+		{
+			testName: "Error-ArgumentWithWrongType",
+			input: inputType{
+				command: Command{
+					Name: "fail-command",
+					arguments: []*param.Argument{
+						{Name: "wrongTypeArg1", Type: param.INT},
+					},
+					options: []*param.Option{},
+					action:  testAction,
+				},
+				inputParams: []string{"Wrong!"},
+			},
+			want:       "",
+			wantErr:    true,
+			wantErrStr: "cannot convert Wrong! to Integer",
 		},
 	}
 
